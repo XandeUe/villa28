@@ -1,0 +1,2655 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Villa 28 Barbearia — Sistema de Agendamentos</title>
+
+  <!-- Google Fonts: Outfit (Títulos & Logo) + Inter (Máxima Legibilidade em UI) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Inter"', 'system-ui', '-apple-system', 'sans-serif'],
+            display: ['"Outfit"', '"Inter"', 'sans-serif'],
+          },
+          colors: {
+            obsidian: {
+              950: '#070708',
+              900: '#0D0D10',
+              850: '#131318',
+              800: '#191920',
+              700: '#24242E',
+            },
+            gold: {
+              200: '#F7E7B4',
+              300: '#EBD07C',
+              400: '#DFB94A',
+              500: '#D4AF37',
+              600: '#B59024',
+              700: '#8E6E16',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons via CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    body {
+      background-color: #070708;
+      color: #F4F4F5;
+      -webkit-tap-highlight-color: transparent;
+      font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0D0D10; }
+    ::-webkit-scrollbar-thumb { background: #2C2C36; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #D4AF37; }
+
+    .gold-gradient {
+      background: linear-gradient(135deg, #F7E7B4 0%, #D4AF37 48%, #A67C1E 100%);
+    }
+    .gold-text-gradient {
+      background: linear-gradient(135deg, #F7E7B4 0%, #D4AF37 60%, #B59024 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .glass-card {
+      background: rgba(19, 19, 24, 0.88);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(212, 175, 55, 0.16);
+    }
+    .animate-fade-in { animation: fadeIn 0.28s ease-out forwards; }
+    .animate-slide-up { animation: slideUp 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body class="min-h-screen font-sans antialiased selection:bg-gold-500 selection:text-obsidian-950">
+
+  <!-- Símbolo SVG Reutilizável da Logo Oficial Villa 28 Barbearia -->
+  <svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
+    <defs>
+      <linearGradient id="villa28-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#FFE033" />
+        <stop offset="55%" stop-color="#F7CE14" />
+        <stop offset="100%" stop-color="#E5B80B" />
+      </linearGradient>
+      <symbol id="villa28-logo" viewBox="0 0 360 124">
+        <path d="M 226 30 Q 244 25.5 262 30 L 266 15 Q 254 22.5 249.5 22 L 244 9.5 L 238.5 22 Q 234 22.5 222 15 Z" fill="url(#villa28-gold)" />
+        <circle cx="221.5" cy="13.5" r="2.6" fill="url(#villa28-gold)" />
+        <circle cx="244" cy="7.5" r="3.2" fill="url(#villa28-gold)" />
+        <circle cx="266.5" cy="13.5" r="2.6" fill="url(#villa28-gold)" />
+        <text x="216" y="79" text-anchor="end" fill="url(#villa28-gold)" font-family="'Outfit', sans-serif" font-weight="700" font-size="60" letter-spacing="2">VILLA</text>
+        <text x="244" y="79" text-anchor="middle" fill="url(#villa28-gold)" font-family="'Outfit', sans-serif" font-weight="700" font-size="61">2</text>
+        <text x="286" y="79" text-anchor="middle" fill="url(#villa28-gold)" font-family="'Outfit', sans-serif" font-weight="700" font-size="61">8</text>
+        <text x="184" y="109" text-anchor="middle" fill="url(#villa28-gold)" font-family="'Outfit', sans-serif" font-weight="600" font-size="18.5" letter-spacing="8.5">BARBEARIA</text>
+      </symbol>
+    </defs>
+  </svg>
+
+  <!-- Container Global de Toasts em Tempo Real -->
+  <div id="toast-container" class="fixed top-4 right-4 z-[100] flex flex-col gap-3 max-w-sm w-[calc(100%-2rem)] pointer-events-none"></div>
+
+  <!-- ===================================================================== -->
+  <!-- TELA 1: LOGIN (DONO & COLABORADORES)                                  -->
+  <!-- ===================================================================== -->
+  <section id="view-login" class="hidden min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden">
+    <div class="absolute -top-40 left-1/2 -translate-x-1/2 w-[540px] h-[540px] rounded-full bg-gold-500/10 blur-[120px] pointer-events-none"></div>
+
+    <div class="w-full max-w-md glass-card rounded-3xl p-7 sm:p-9 shadow-2xl relative z-10 animate-slide-up">
+      <div class="text-center mb-7">
+        <div class="mx-auto w-56 sm:w-64 mb-2 px-3 py-2 rounded-2xl bg-black/70 border border-gold-500/15 shadow-lg">
+          <svg class="w-full h-auto block" role="img" aria-label="Villa 28 Barbearia">
+            <use href="#villa28-logo" />
+          </svg>
+        </div>
+        <p class="text-zinc-400 text-sm mt-2">Acesso exclusivo para Gestão e Equipe</p>
+      </div>
+
+      <form id="login-form" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5">Usuário</label>
+          <div class="relative">
+            <i data-lucide="user" class="w-4 h-4 text-gold-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+            <input type="text" id="login-username" required placeholder="Ex: dono ou lucas"
+              class="w-full bg-obsidian-900 border border-zinc-800 focus:border-gold-500 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-zinc-500 outline-none transition" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5">Senha</label>
+          <div class="relative">
+            <i data-lucide="lock" class="w-4 h-4 text-gold-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+            <input type="password" id="login-password" required placeholder="••••••"
+              class="w-full bg-obsidian-900 border border-zinc-800 focus:border-gold-500 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-zinc-500 outline-none transition" />
+          </div>
+        </div>
+
+        <p id="login-error" class="hidden text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></p>
+
+        <button type="submit" class="w-full gold-gradient text-obsidian-950 font-bold py-3.5 rounded-xl shadow-lg shadow-gold-500/20 hover:brightness-110 active:scale-[0.99] transition flex items-center justify-center gap-2">
+          <span>Entrar no Painel</span>
+          <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </button>
+      </form>
+
+      <!-- Acesso Rápido Dinâmico (lê os usuários salvos no localStorage) -->
+      <div class="mt-6 pt-5 border-t border-zinc-800/80">
+        <p class="text-[11px] uppercase tracking-wider text-zinc-500 font-semibold mb-2.5 text-center">Acesso Rápido (Equipe Cadastrada)</p>
+        <div id="login-quick-list" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
+      </div>
+
+      <div class="mt-5">
+        <button type="button" onclick="switchView('client')" class="w-full py-3 rounded-xl border border-gold-500/30 bg-gold-500/5 hover:bg-gold-500/10 text-gold-300 text-sm font-semibold transition flex items-center justify-center gap-2">
+          <i data-lucide="smartphone" class="w-4 h-4"></i>
+          <span>Simular Visão do Cliente (?agendar=true)</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- TELA 2: PAINEL DO ADMINISTRADOR / COLABORADOR                         -->
+  <!-- ===================================================================== -->
+  <section id="view-admin" class="hidden min-h-screen flex flex-col lg:flex-row">
+    <!-- Sidebar Desktop / Header Mobile -->
+    <aside class="lg:w-72 bg-obsidian-900 border-b lg:border-b-0 lg:border-r border-zinc-800/80 flex flex-col shrink-0">
+      <div class="p-4 sm:p-5 flex items-center justify-between lg:justify-center border-b border-zinc-800/70 bg-black/40">
+        <div class="flex flex-col items-start lg:items-center">
+          <svg class="h-11 sm:h-12 w-36 sm:w-44 block" role="img" aria-label="Villa 28 Barbearia">
+            <use href="#villa28-logo" />
+          </svg>
+          <p class="text-[11px] text-zinc-400 font-medium mt-0.5 lg:text-center">Gestão Inteligente</p>
+        </div>
+        <button onclick="switchView('client')" class="lg:hidden px-3 py-1.5 rounded-lg bg-gold-500/15 border border-gold-500/30 text-gold-300 text-xs font-semibold flex items-center gap-1.5">
+          <i data-lucide="smartphone" class="w-3.5 h-3.5"></i>
+          <span>Visão Cliente</span>
+        </button>
+      </div>
+
+      <!-- Perfil Logado -->
+      <div class="px-4 py-3.5 border-b border-zinc-800/60 flex items-center justify-between bg-obsidian-950/40">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div id="user-avatar" class="w-9 h-9 rounded-full bg-gold-500/20 border border-gold-500/40 flex items-center justify-center text-gold-300 font-bold text-sm shrink-0">R</div>
+          <div class="min-w-0">
+            <p id="user-display-name" class="text-sm font-semibold text-white truncate">Usuário</p>
+            <span id="user-role-badge" class="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-gold-500/15 text-gold-400">
+              Dono
+            </span>
+          </div>
+        </div>
+        <button onclick="logout()" title="Sair" class="p-2 rounded-lg text-zinc-400 hover:text-red-400 hover:bg-red-500/10 transition">
+          <i data-lucide="log-out" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Navegação -->
+      <nav class="p-2 sm:p-3 flex lg:flex-col gap-1 overflow-x-auto lg:overflow-visible flex-1" id="admin-nav">
+        <button data-tab="agenda" onclick="setAdminTab('agenda')" class="admin-tab-btn shrink-0 flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition">
+          <i data-lucide="calendar-days" class="w-4 h-4"></i>
+          <span>Agenda</span>
+        </button>
+        <button data-tab="schedule" onclick="setAdminTab('schedule')" class="admin-tab-btn shrink-0 flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition">
+          <i data-lucide="lock" class="w-4 h-4"></i>
+          <span>Horários & Bloqueios</span>
+        </button>
+        <button data-tab="team" onclick="setAdminTab('team')" class="admin-tab-btn shrink-0 flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition">
+          <i data-lucide="briefcase" class="w-4 h-4"></i>
+          <span>Equipe / Colaboradores</span>
+        </button>
+        <button data-tab="services" onclick="setAdminTab('services')" class="admin-tab-btn shrink-0 flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition">
+          <i data-lucide="sparkles" class="w-4 h-4"></i>
+          <span>Serviços & Comissões</span>
+        </button>
+        <button data-tab="clients" onclick="setAdminTab('clients')" class="admin-tab-btn shrink-0 flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition">
+          <i data-lucide="users" class="w-4 h-4"></i>
+          <span>Clientes</span>
+        </button>
+        <button data-tab="commissions" onclick="setAdminTab('commissions')" class="admin-tab-btn shrink-0 flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition">
+          <i data-lucide="wallet" class="w-4 h-4"></i>
+          <span>Comissões</span>
+        </button>
+        <button data-tab="share" onclick="setAdminTab('share')" class="admin-tab-btn shrink-0 flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition">
+          <i data-lucide="qr-code" class="w-4 h-4"></i>
+          <span>Link & QR Code</span>
+        </button>
+      </nav>
+
+      <!-- Ações Extras Sidebar Desktop -->
+      <div class="hidden lg:block p-4 border-t border-zinc-800/70 space-y-2">
+        <button onclick="switchView('client')" class="w-full py-2.5 px-3 rounded-xl gold-gradient text-obsidian-950 font-bold text-xs shadow-md hover:brightness-110 transition flex items-center justify-center gap-2">
+          <i data-lucide="smartphone" class="w-4 h-4"></i>
+          <span>Simular Painel do Cliente</span>
+        </button>
+        <button onclick="openShareModal()" class="w-full py-2 px-3 rounded-xl bg-obsidian-800 hover:bg-obsidian-700 border border-zinc-700/70 text-zinc-200 text-xs font-medium transition flex items-center justify-center gap-2">
+          <i data-lucide="share-2" class="w-3.5 h-3.5 text-gold-400"></i>
+          <span>Abrir QR Code Rápido</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Conteúdo Principal do Painel -->
+    <main class="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto bg-obsidian-950">
+      <!-- Top Bar -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div>
+          <h1 id="tab-title" class="font-display text-2xl sm:text-3xl font-bold tracking-tight text-white">Agenda & Agendamentos</h1>
+          <p id="tab-subtitle" class="text-sm text-zinc-400 mt-0.5">Gerencie horários, aprovações e reservas automáticas.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2.5">
+          <button onclick="openShareModal()" class="px-3.5 py-2 rounded-xl bg-obsidian-850 border border-gold-500/30 text-gold-300 hover:bg-gold-500/10 text-xs sm:text-sm font-semibold transition flex items-center gap-2">
+            <i data-lucide="qr-code" class="w-4 h-4"></i>
+            <span>Link / QR Code</span>
+          </button>
+          <button onclick="openManualAppointmentModal()" class="px-4 py-2 rounded-xl gold-gradient text-obsidian-950 text-xs sm:text-sm font-bold shadow-lg shadow-gold-500/15 hover:brightness-110 transition flex items-center gap-2">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            <span>Novo Agendamento</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Cards de Estatísticas Rápidas -->
+      <div class="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 mb-7" id="stats-cards">
+        <div class="glass-card rounded-2xl p-4 sm:p-5">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-medium text-zinc-400">Agendamentos Hoje</span>
+            <div class="w-8 h-8 rounded-lg bg-gold-500/15 text-gold-400 flex items-center justify-center">
+              <i data-lucide="calendar-check" class="w-4 h-4"></i>
+            </div>
+          </div>
+          <p id="stat-today" class="font-display text-2xl sm:text-3xl font-bold text-white">0</p>
+          <p class="text-[11px] text-zinc-500 mt-1">Reservas ativas para hoje</p>
+        </div>
+
+        <div class="glass-card rounded-2xl p-4 sm:p-5">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-medium text-zinc-400">Pendentes</span>
+            <div class="w-8 h-8 rounded-lg bg-amber-500/15 text-amber-400 flex items-center justify-center">
+              <i data-lucide="clock" class="w-4 h-4"></i>
+            </div>
+          </div>
+          <p id="stat-pending" class="font-display text-2xl sm:text-3xl font-bold text-amber-400">0</p>
+          <p class="text-[11px] text-zinc-500 mt-1">Aguardando confirmação</p>
+        </div>
+
+        <div class="glass-card rounded-2xl p-4 sm:p-5">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-medium text-zinc-400">Total de Serviços</span>
+            <div class="w-8 h-8 rounded-lg bg-emerald-500/15 text-emerald-400 flex items-center justify-center">
+              <i data-lucide="scissors" class="w-4 h-4"></i>
+            </div>
+          </div>
+          <p id="stat-services" class="font-display text-2xl sm:text-3xl font-bold text-white">0</p>
+          <p class="text-[11px] text-zinc-500 mt-1">Ativos no catálogo</p>
+        </div>
+
+        <div class="glass-card rounded-2xl p-4 sm:p-5">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-medium text-zinc-400">Total de Clientes</span>
+            <div class="w-8 h-8 rounded-lg bg-sky-500/15 text-sky-400 flex items-center justify-center">
+              <i data-lucide="users" class="w-4 h-4"></i>
+            </div>
+          </div>
+          <p id="stat-clients" class="font-display text-2xl sm:text-3xl font-bold text-white">0</p>
+          <p class="text-[11px] text-zinc-500 mt-1">Base cadastrada</p>
+        </div>
+      </div>
+
+      <!-- ABA 1: AGENDA / AGENDAMENTOS -->
+      <div id="tab-agenda" class="admin-tab-content space-y-4 animate-fade-in">
+        <div class="glass-card rounded-2xl p-4 flex flex-col xl:flex-row xl:items-end justify-between gap-3">
+          <div class="flex flex-wrap items-end gap-2.5">
+            <div>
+              <label class="block text-[10px] uppercase tracking-wider text-zinc-500 font-semibold mb-1">Filtrar por Data</label>
+              <div class="flex items-center gap-1.5">
+                <input type="date" id="filter-date" onchange="renderAgenda()"
+                  class="bg-obsidian-900 border border-zinc-800 focus:border-gold-500 rounded-xl px-3 py-1.5 text-xs sm:text-sm text-white outline-none" />
+                <button onclick="clearDateFilter()" class="px-2.5 py-1.5 rounded-xl bg-obsidian-800 hover:bg-obsidian-700 text-xs text-zinc-300 font-medium transition">Todas</button>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-[10px] uppercase tracking-wider text-zinc-500 font-semibold mb-1">Status</label>
+              <select id="filter-status" onchange="renderAgenda()"
+                class="bg-obsidian-900 border border-zinc-800 focus:border-gold-500 rounded-xl px-3 py-1.5 text-xs sm:text-sm text-white outline-none">
+                <option value="all">Todos os status</option>
+                <option value="Pendente">Pendente</option>
+                <option value="Confirmado">Confirmado</option>
+                <option value="Concluído">Concluído</option>
+                <option value="Cancelado">Cancelado</option>
+              </select>
+            </div>
+
+            <div id="filter-prof-wrapper">
+              <label class="block text-[10px] uppercase tracking-wider text-zinc-500 font-semibold mb-1">Profissional</label>
+              <select id="filter-professional" onchange="renderAgenda()"
+                class="bg-obsidian-900 border border-zinc-800 focus:border-gold-500 rounded-xl px-3 py-1.5 text-xs sm:text-sm text-white outline-none">
+                <option value="all">Todos</option>
+              </select>
+            </div>
+
+            <button onclick="setAdminTab('schedule')" class="px-3.5 py-2 rounded-xl bg-obsidian-800 hover:bg-obsidian-700 border border-gold-500/30 text-gold-300 text-xs font-semibold transition flex items-center gap-1.5">
+              <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+              <span>Travar Horários / Almoço</span>
+            </button>
+          </div>
+
+          <div id="owner-rule-banner" class="text-xs px-3 py-2 rounded-xl bg-gold-500/10 border border-gold-500/25 text-gold-300 flex items-center gap-2">
+            <i data-lucide="shield-check" class="w-4 h-4 shrink-0"></i>
+            <span id="owner-rule-text">Somente o <strong>Dono</strong> pode alterar status e aprovar comissões.</span>
+          </div>
+        </div>
+
+        <div id="agenda-locks-summary" class="rounded-2xl bg-obsidian-900/70 border border-zinc-800/80 px-4 py-3 text-xs text-zinc-300 flex flex-wrap items-center gap-x-5 gap-y-2"></div>
+
+        <div class="glass-card rounded-2xl overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-zinc-800/90 bg-obsidian-900/70 text-[11px] uppercase tracking-wider text-zinc-400 font-semibold">
+                  <th class="py-3.5 px-4">Data & Hora</th>
+                  <th class="py-3.5 px-4">Cliente</th>
+                  <th class="py-3.5 px-4">Serviço</th>
+                  <th class="py-3.5 px-4">Profissional</th>
+                  <th class="py-3.5 px-4">Valor / Comissão</th>
+                  <th class="py-3.5 px-4">Status (Aprovação)</th>
+                  <th class="py-3.5 px-4 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="agenda-tbody" class="divide-y divide-zinc-800/60 text-sm"></tbody>
+            </table>
+          </div>
+          <div id="agenda-empty" class="hidden py-12 text-center text-zinc-500">
+            <i data-lucide="calendar-x" class="w-10 h-10 mx-auto mb-2 opacity-50"></i>
+            <p class="text-sm">Nenhum agendamento encontrado para os filtros selecionados.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ABA 2: HORÁRIOS & BLOQUEIOS -->
+      <div id="tab-schedule" class="admin-tab-content hidden space-y-6 animate-fade-in">
+        <div id="schedule-permission-banner" class="glass-card rounded-2xl p-4 border-l-4 border-l-gold-500 flex items-center justify-between gap-3">
+          <div class="flex items-start gap-3">
+            <i data-lucide="shield-check" class="w-5 h-5 text-gold-400 shrink-0 mt-0.5"></i>
+            <p class="text-xs sm:text-sm text-zinc-300">
+              <strong class="text-gold-300">Controle do Dono:</strong> Configure os horários de abertura/fechamento (Seg–Sex, Sábado e Domingo), horários de almoço da equipe e bloqueios pontuais. O link de autoatendimento respeita essas travas imediatamente.
+            </p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <!-- Funcionamento Semanal -->
+          <div class="glass-card rounded-2xl p-5 sm:p-6 space-y-4">
+            <div>
+              <h3 class="font-display text-lg font-bold text-white flex items-center gap-2">
+                <i data-lucide="clock" class="w-5 h-5 text-gold-400"></i>
+                <span>Funcionamento da Barbearia</span>
+              </h3>
+              <p class="text-xs text-zinc-400 mt-0.5">Defina horário de início e fim para Seg–Sex, Sábado e Domingo.</p>
+            </div>
+
+            <div id="weekdays-bulk-box" class="p-3.5 rounded-xl bg-obsidian-900 border border-gold-500/25 space-y-2.5">
+              <span class="block text-[11px] font-bold uppercase tracking-wider text-gold-400">Atalho Rápido • Segunda a Sexta</span>
+              <div class="flex flex-wrap items-center gap-2">
+                <div class="flex items-center gap-1.5">
+                  <span class="text-xs text-zinc-400">Início:</span>
+                  <input type="time" id="bulk-weekday-start" value="09:00" class="bg-obsidian-950 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-gold-500" />
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <span class="text-xs text-zinc-400">Fim:</span>
+                  <input type="time" id="bulk-weekday-end" value="20:00" class="bg-obsidian-950 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-gold-500" />
+                </div>
+                <button type="button" onclick="applyWeekdaysBulk()" class="px-3 py-1.5 rounded-lg bg-gold-500/20 hover:bg-gold-500/30 border border-gold-500/40 text-gold-300 text-xs font-bold transition">
+                  Aplicar Seg–Sex
+                </button>
+              </div>
+            </div>
+
+            <div id="weekly-hours-list" class="space-y-2"></div>
+
+            <button id="btn-save-weekly" type="button" onclick="saveWeeklyHours()" class="w-full py-3 rounded-xl gold-gradient text-obsidian-950 font-bold text-sm shadow-md hover:brightness-110 transition flex items-center justify-center gap-2">
+              <i data-lucide="save" class="w-4 h-4"></i>
+              <span>Salvar Horários de Funcionamento</span>
+            </button>
+          </div>
+
+          <!-- Horário de Almoço dos Colaboradores -->
+          <div class="glass-card rounded-2xl p-5 sm:p-6 space-y-4">
+            <div>
+              <h3 class="font-display text-lg font-bold text-white flex items-center gap-2">
+                <i data-lucide="utensils" class="w-5 h-5 text-gold-400"></i>
+                <span>Horário de Almoço da Equipe</span>
+              </h3>
+              <p class="text-xs text-zinc-400 mt-0.5">Bloqueie a pausa de almoço individual de cada colaborador.</p>
+            </div>
+
+            <div id="lunch-breaks-list" class="space-y-3"></div>
+
+            <button id="btn-save-lunch" type="button" onclick="saveLunchBreaks()" class="w-full py-3 rounded-xl gold-gradient text-obsidian-950 font-bold text-sm shadow-md hover:brightness-110 transition flex items-center justify-center gap-2">
+              <i data-lucide="save" class="w-4 h-4"></i>
+              <span>Salvar Horários de Almoço</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Travar Horários Específicos -->
+        <div class="glass-card rounded-2xl p-5 sm:p-6 space-y-4">
+          <div>
+            <h3 class="font-display text-lg font-bold text-white flex items-center gap-2">
+              <i data-lucide="ban" class="w-5 h-5 text-red-400"></i>
+              <span>Travar Horários Específicos (Bloqueios Pontuais)</span>
+            </h3>
+            <p class="text-xs text-zinc-400 mt-0.5">Impeça agendamentos em uma data e faixa de horário específica (ex: folga, reunião, abertura mais tarde em um dia).</p>
+          </div>
+
+          <form id="block-slot-form" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 items-end bg-obsidian-900/80 border border-zinc-800 rounded-2xl p-4">
+            <div>
+              <label class="block text-[11px] font-semibold text-zinc-400 mb-1">Data</label>
+              <input type="date" id="block-date" required class="w-full bg-obsidian-950 border border-zinc-800 focus:border-gold-500 rounded-xl px-3 py-2 text-xs text-white outline-none" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-zinc-400 mb-1">Quem bloquear?</label>
+              <select id="block-prof" class="w-full bg-obsidian-950 border border-zinc-800 focus:border-gold-500 rounded-xl px-3 py-2 text-xs text-white outline-none"></select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-zinc-400 mb-1">Travar das</label>
+              <input type="time" id="block-start" required value="09:00" class="w-full bg-obsidian-950 border border-zinc-800 focus:border-gold-500 rounded-xl px-3 py-2 text-xs text-white outline-none" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-zinc-400 mb-1">Até às</label>
+              <input type="time" id="block-end" required value="11:00" class="w-full bg-obsidian-950 border border-zinc-800 focus:border-gold-500 rounded-xl px-3 py-2 text-xs text-white outline-none" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-zinc-400 mb-1">Motivo (opcional)</label>
+              <input type="text" id="block-reason" placeholder="Ex: Folga / Reunião" class="w-full bg-obsidian-950 border border-zinc-800 focus:border-gold-500 rounded-xl px-3 py-2 text-xs text-white outline-none" />
+            </div>
+            <button id="btn-add-block" type="submit" class="py-2.5 px-4 rounded-xl bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-red-300 font-bold text-xs transition flex items-center justify-center gap-1.5">
+              <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+              <span>Travar Horário</span>
+            </button>
+          </form>
+
+          <div id="blocked-slots-list" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3"></div>
+        </div>
+      </div>
+
+      <!-- ABA 3: EQUIPE / COLABORADORES -->
+      <div id="tab-team" class="admin-tab-content hidden space-y-4 animate-fade-in">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <p class="text-sm text-zinc-400">Adicione colaboradores, edite nomes, especialidades e defina usuário e senha de acesso.</p>
+          <button id="btn-add-member" onclick="openTeamModal()" class="px-4 py-2.5 rounded-xl gold-gradient text-obsidian-950 text-sm font-bold shadow-md hover:brightness-110 transition flex items-center justify-center gap-2">
+            <i data-lucide="user-plus" class="w-4 h-4"></i>
+            <span>Adicionar Colaborador</span>
+          </button>
+        </div>
+
+        <div id="team-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+      </div>
+
+      <!-- ABA 4: GESTÃO DE SERVIÇOS -->
+      <div id="tab-services" class="admin-tab-content hidden space-y-4 animate-fade-in">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <p class="text-sm text-zinc-400">Defina valores, duração e percentual de comissão pago aos colaboradores.</p>
+          <button id="btn-add-service" onclick="openServiceModal()" class="px-4 py-2.5 rounded-xl gold-gradient text-obsidian-950 text-sm font-bold shadow-md hover:brightness-110 transition flex items-center justify-center gap-2">
+            <i data-lucide="plus-circle" class="w-4 h-4"></i>
+            <span>Cadastrar Serviço</span>
+          </button>
+        </div>
+
+        <div id="services-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+      </div>
+
+      <!-- ABA 5: GESTÃO DE CLIENTES -->
+      <div id="tab-clients" class="admin-tab-content hidden space-y-4 animate-fade-in">
+        <div class="glass-card rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="relative flex-1 max-w-md">
+            <i data-lucide="search" class="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+            <input type="text" id="client-search" oninput="renderClients()" placeholder="Buscar cliente por nome ou WhatsApp..."
+              class="w-full bg-obsidian-900 border border-zinc-800 focus:border-gold-500 rounded-xl pl-10 pr-4 py-2 text-sm text-white outline-none" />
+          </div>
+          <span id="clients-count-label" class="text-xs text-zinc-400 font-medium"></span>
+        </div>
+
+        <div class="glass-card rounded-2xl overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-zinc-800/90 bg-obsidian-900/70 text-[11px] uppercase tracking-wider text-zinc-400 font-semibold">
+                  <th class="py-3.5 px-4">Cliente</th>
+                  <th class="py-3.5 px-4">WhatsApp</th>
+                  <th class="py-3.5 px-4">Agendamentos</th>
+                  <th class="py-3.5 px-4">Total Investido</th>
+                  <th class="py-3.5 px-4 text-right">Histórico</th>
+                </tr>
+              </thead>
+              <tbody id="clients-tbody" class="divide-y divide-zinc-800/60 text-sm"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ABA 6: COMISSÕES -->
+      <div id="tab-commissions" class="admin-tab-content hidden space-y-5 animate-fade-in">
+        <div class="glass-card rounded-2xl p-4 border-l-4 border-l-gold-500 flex items-start gap-3">
+          <i data-lucide="info" class="w-5 h-5 text-gold-400 shrink-0 mt-0.5"></i>
+          <div class="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+            <strong class="text-gold-300">Regra de Comissão Aprovada:</strong> Apenas agendamentos marcados como <span class="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 font-semibold">Concluído</span> pelo <strong>Dono da barbearia</strong> são contabilizados como comissão aprovada para repasse.
+          </div>
+        </div>
+        <div id="commissions-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+      </div>
+
+      <!-- ABA 7: LINK DE AUTOATENDIMENTO & QR CODE -->
+      <div id="tab-share" class="admin-tab-content hidden animate-fade-in">
+        <div class="max-w-2xl mx-auto glass-card rounded-3xl p-6 sm:p-8 text-center">
+          <div class="mx-auto w-44 px-3 py-1.5 rounded-2xl bg-black/70 border border-gold-500/15 mb-4">
+            <svg class="w-full h-auto block" role="img" aria-label="Villa 28 Barbearia">
+              <use href="#villa28-logo" />
+            </svg>
+          </div>
+          <h2 class="font-display text-2xl font-bold text-white tracking-tight">Autoatendimento 24h</h2>
+          <p class="text-sm text-zinc-400 mt-1 max-w-md mx-auto">Compartilhe este link na bio do Instagram, respostas automáticas do WhatsApp ou imprima o QR Code na recepção.</p>
+
+          <div class="my-6 inline-block p-4 bg-white rounded-2xl shadow-xl">
+            <div id="share-tab-qrcode" class="w-44 h-44 flex items-center justify-center"></div>
+          </div>
+
+          <div class="bg-obsidian-900 border border-zinc-800 rounded-2xl p-3 flex flex-col sm:flex-row items-center gap-2">
+            <input type="text" readonly id="share-tab-link" class="w-full bg-transparent text-xs sm:text-sm text-gold-300 font-mono outline-none px-2 text-center sm:text-left" />
+            <button onclick="copyBookingLink()" class="w-full sm:w-auto shrink-0 px-4 py-2 rounded-xl gold-gradient text-obsidian-950 text-xs font-bold hover:brightness-110 transition flex items-center justify-center gap-1.5">
+              <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+              <span>Copiar Link</span>
+            </button>
+          </div>
+
+          <div class="mt-4 flex flex-wrap justify-center gap-3">
+            <button onclick="switchView('client')" class="px-5 py-2.5 rounded-xl bg-obsidian-800 hover:bg-obsidian-700 border border-gold-500/30 text-gold-300 text-sm font-semibold transition flex items-center gap-2">
+              <i data-lucide="external-link" class="w-4 h-4"></i>
+              <span>Testar Experiência do Cliente</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- TELA 3: PAINEL DO CLIENTE (ESTILO APP MOBILE - ?agendar=true)         -->
+  <!-- ===================================================================== -->
+  <section id="view-client" class="hidden min-h-screen bg-obsidian-950 flex flex-col items-center justify-start sm:justify-center sm:py-8 px-0 sm:px-4 relative">
+    <div class="w-full max-w-md flex items-center justify-between px-4 py-2.5 bg-obsidian-900/90 border-b sm:border sm:rounded-t-3xl border-gold-500/20 text-xs">
+      <span class="flex items-center gap-1.5 text-gold-400 font-semibold">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        Link de Autoatendimento
+      </span>
+      <button onclick="returnToAdminOrLogin()" class="px-2.5 py-1 rounded-lg bg-obsidian-800 hover:bg-obsidian-700 text-zinc-300 hover:text-white transition flex items-center gap-1">
+        <i data-lucide="layout-dashboard" class="w-3.5 h-3.5 text-gold-400"></i>
+        <span>Painel Admin</span>
+      </button>
+    </div>
+
+    <div class="w-full max-w-md bg-obsidian-900 sm:border-x sm:border-b border-gold-500/20 sm:rounded-b-3xl shadow-2xl overflow-hidden flex flex-col min-h-[calc(100vh-44px)] sm:min-h-[680px]">
+      <!-- Cabeçalho da Barbearia com Logo -->
+      <header class="p-5 pb-4 bg-gradient-to-b from-black via-obsidian-900 to-obsidian-900 border-b border-zinc-800/80">
+        <div class="flex items-center justify-between gap-3">
+          <svg class="h-12 w-40 block" role="img" aria-label="Villa 28 Barbearia">
+            <use href="#villa28-logo" />
+          </svg>
+          <span class="text-[11px] text-zinc-300 bg-obsidian-850 border border-gold-500/20 px-2.5 py-1 rounded-full flex items-center gap-1 font-medium shrink-0">
+            <i data-lucide="calendar-check-2" class="w-3 h-3 text-gold-400"></i>
+            Agenda Online
+          </span>
+        </div>
+
+        <!-- Stepper Progress (Passos 1 a 4) -->
+        <div class="mt-5 grid grid-cols-4 gap-1.5" id="client-stepper">
+          <div class="step-pill" data-step="1">
+            <div class="h-1.5 rounded-full bg-gold-500 transition-all"></div>
+            <span class="block text-[10px] font-semibold text-gold-400 mt-1 text-center">1. Serviço</span>
+          </div>
+          <div class="step-pill" data-step="2">
+            <div class="h-1.5 rounded-full bg-zinc-800 transition-all"></div>
+            <span class="block text-[10px] font-medium text-zinc-500 mt-1 text-center">2. Horário</span>
+          </div>
+          <div class="step-pill" data-step="3">
+            <div class="h-1.5 rounded-full bg-zinc-800 transition-all"></div>
+            <span class="block text-[10px] font-medium text-zinc-500 mt-1 text-center">3. Dados</span>
+          </div>
+          <div class="step-pill" data-step="4">
+            <div class="h-1.5 rounded-full bg-zinc-800 transition-all"></div>
+            <span class="block text-[10px] font-medium text-zinc-500 mt-1 text-center">4. Pronto</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Corpo do Wizard -->
+      <div class="flex-1 p-5 overflow-y-auto">
+        <!-- PASSO 1: ESCOLHA DO SERVIÇO -->
+        <div id="wizard-step-1" class="wizard-step space-y-3 animate-fade-in">
+          <div class="mb-3">
+            <h2 class="font-display text-lg font-bold text-white tracking-tight">Qual serviço deseja realizar?</h2>
+            <p class="text-xs text-zinc-400">Selecione uma opção abaixo para continuar.</p>
+          </div>
+          <div id="client-services-list" class="space-y-2.5"></div>
+        </div>
+
+        <!-- PASSO 2: PROFISSIONAL, DATA E HORÁRIO -->
+        <div id="wizard-step-2" class="wizard-step hidden space-y-5 animate-fade-in">
+          <div>
+            <h2 class="font-display text-lg font-bold text-white tracking-tight">Escolha profissional e horário</h2>
+            <p class="text-xs text-zinc-400" id="step2-service-summary"></p>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-2">Profissional Preferido</label>
+            <div id="client-professionals-list" class="grid grid-cols-1 gap-2"></div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-2">Data do Atendimento</label>
+            <input type="date" id="client-date-input" onchange="renderAvailableSlots()"
+              class="w-full bg-obsidian-950 border border-zinc-800 focus:border-gold-500 rounded-xl px-4 py-3 text-sm text-white outline-none" />
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-xs font-semibold uppercase tracking-wider text-zinc-400">Horários Disponíveis</label>
+              <span class="text-[11px] text-gold-400 font-medium" id="slots-status-hint"></span>
+            </div>
+            <div id="client-slots-grid" class="grid grid-cols-3 sm:grid-cols-4 gap-2"></div>
+          </div>
+        </div>
+
+        <!-- PASSO 3: NOME E WHATSAPP -->
+        <div id="wizard-step-3" class="wizard-step hidden space-y-4 animate-fade-in">
+          <div>
+            <h2 class="font-display text-lg font-bold text-white tracking-tight">Seus dados de contato</h2>
+            <p class="text-xs text-zinc-400">Enviaremos os detalhes e lembretes pelo WhatsApp.</p>
+          </div>
+
+          <div class="rounded-2xl bg-obsidian-950 border border-gold-500/25 p-4 space-y-1.5 text-xs">
+            <div class="flex justify-between">
+              <span class="text-zinc-400">Serviço:</span>
+              <span class="font-semibold text-white" id="summary-service"></span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-zinc-400">Profissional:</span>
+              <span class="font-semibold text-white" id="summary-prof"></span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-zinc-400">Data e Hora:</span>
+              <span class="font-semibold text-gold-400" id="summary-datetime"></span>
+            </div>
+            <div class="flex justify-between pt-1.5 border-t border-zinc-800">
+              <span class="text-zinc-400">Valor Total:</span>
+              <span class="font-bold text-gold-300 text-sm" id="summary-price"></span>
+            </div>
+          </div>
+
+          <div class="space-y-3">
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5">Seu Nome Completo</label>
+              <input type="text" id="client-name-input" placeholder="Ex: João Pedro Silva"
+                class="w-full bg-obsidian-950 border border-zinc-800 focus:border-gold-500 rounded-xl px-4 py-3 text-sm text-white outline-none" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5">Seu WhatsApp</label>
+              <input type="tel" id="client-whatsapp-input" oninput="maskPhone(this)" maxlength="15" placeholder="(11) 99999-9999"
+                class="w-full bg-obsidian-950 border border-zinc-800 focus:border-gold-500 rounded-xl px-4 py-3 text-sm text-white outline-none" />
+            </div>
+            <p id="client-step3-error" class="hidden text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></p>
+          </div>
+        </div>
+
+        <!-- PASSO 4: CONFIRMAÇÃO EM TEMPO REAL -->
+        <div id="wizard-step-4" class="wizard-step hidden text-center py-4 space-y-5 animate-slide-up">
+          <div class="w-20 h-20 mx-auto rounded-full bg-emerald-500/15 border-2 border-emerald-400 flex items-center justify-center text-emerald-400 shadow-lg shadow-emerald-500/20">
+            <i data-lucide="check-check" class="w-10 h-10"></i>
+          </div>
+
+          <div>
+            <span class="inline-block px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-400 text-[11px] font-bold uppercase tracking-wider mb-2">Agendamento Confirmado</span>
+            <h2 class="font-display text-2xl font-bold text-white tracking-tight">Reserva Recebida!</h2>
+            <p class="text-sm text-zinc-300 mt-2 leading-relaxed" id="confirmation-realtime-msg"></p>
+          </div>
+
+          <div class="rounded-2xl bg-obsidian-950 border border-gold-500/30 p-4 text-left space-y-2 text-xs" id="confirmation-ticket"></div>
+
+          <div class="space-y-2.5 pt-2">
+            <a id="confirmation-wa-btn" target="_blank" class="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition flex items-center justify-center gap-2">
+              <i data-lucide="message-circle" class="w-4 h-4"></i>
+              <span>Enviar Comprovante no WhatsApp</span>
+            </a>
+            <button onclick="resetClientWizard()" class="w-full py-3 rounded-xl bg-obsidian-800 hover:bg-obsidian-700 text-zinc-200 text-sm font-semibold transition">
+              Fazer Novo Agendamento
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rodapé de Navegação do Wizard -->
+      <footer id="client-wizard-footer" class="p-4 bg-obsidian-950/80 border-t border-zinc-800/80 flex items-center justify-between gap-3">
+        <button id="wizard-prev-btn" onclick="prevWizardStep()" class="hidden px-4 py-3 rounded-xl bg-obsidian-800 hover:bg-obsidian-700 text-zinc-200 text-sm font-semibold transition flex items-center gap-1.5">
+          <i data-lucide="chevron-left" class="w-4 h-4"></i>
+          <span>Voltar</span>
+        </button>
+        <button id="wizard-next-btn" onclick="nextWizardStep()" class="flex-1 py-3.5 rounded-xl gold-gradient text-obsidian-950 font-bold text-sm shadow-lg shadow-gold-500/20 hover:brightness-110 transition flex items-center justify-center gap-2">
+          <span>Continuar</span>
+          <i data-lucide="chevron-right" class="w-4 h-4"></i>
+        </button>
+      </footer>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- MODAIS DO SISTEMA                                                     -->
+  <!-- ===================================================================== -->
+
+  <!-- Modal: Cadastrar / Editar Colaborador -->
+  <div id="modal-team" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="w-full max-w-md glass-card rounded-3xl p-6 animate-slide-up">
+      <div class="flex items-center justify-between mb-5">
+        <h3 id="modal-team-title" class="font-display text-xl font-bold text-white tracking-tight">Adicionar Colaborador</h3>
+        <button onclick="closeModal('modal-team')" class="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-obsidian-800">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <form id="team-form" class="space-y-3.5">
+        <input type="hidden" id="team-id" />
+        <div>
+          <label class="block text-xs font-semibold text-zinc-400 mb-1">Nome Completo</label>
+          <input type="text" id="team-name" required placeholder="Ex: Rafael Costa"
+            class="w-full bg-obsidian-900 border border-zinc-800 focus:border-gold-500 rounded-xl px-3.5 py-2.5 text-sm text-white outline-none" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-zinc-400 mb-1">Especialidade / Função</label>
+          <input type="text" id="team-specialty" required placeholder="Ex: Barbeiro Clássico & Degradê"
+            class="w-full bg-obsidian-900 border border-zinc-800 focus:border-gold-500 rounded-xl px-3.5 py-2.5 text-sm text-white outline-none" />
+        </div>
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-xs font-semibold text-zinc-400 mb-1">Usuário de Acesso</label>
+            <input type="text" id="team-username" required placeholder="Ex: rafael"
+              class="w-full bg-obsidian-900 border border-zinc-800 focus:border-gold-500 rounded-xl px-3.5 py-2.5 text-sm text-white outline-none" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-zinc-400 mb-1">Senha de Acesso</label>
+            <div class="relative">
+              <input type="password" id="team-password" required placeholder="Senha"
+                class="w-full bg-obsidian-900 border border-zinc-800 focus:border-gold-500 rounded-xl pl-3.5 pr-9 py-2.5 text-sm text-white outline-none" />
+              <button type="button" onclick="togglePasswordField('team-password', this)" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-gold-400">
+                <i data-lucide="eye" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-zinc-400 mb-1">Nível de Acesso</label>
+          <select id="team-role" class="w-full bg-obsidian-900 border border-zinc-800 focus:border-gold-500 rounded-xl px-3.5 py-2.5 text-sm text-white outline-none">
+            <option value="collaborator">Colaborador (Vê sua agenda e comissões)</option>
+            <option value="owner">Dono / Administrador (Acesso total)</option>
+          </select>
+        </div>
+        <p id="team-form-error" class="hidden text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></p>
+        <div class="flex gap-2.5 pt-2">
+          <button type="button" onclick="closeModal('modal-team')" class="flex-1 py-2.5 rounded-xl bg-obsidian-800 text-zinc-300 text-sm font-semibold">Cancelar</button>
+          <button type="submit" class="flex-1 py-2.5 rounded-xl gold-gradient text-obsidian-950 text-sm font-bold">Salvar Membro</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Cadastrar / Editar Serviço -->
+  <div id="modal-service" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="w-full max-w-md glass-card rounded-3xl p-6 animate-slide-up">
+      <div class="flex items-center justify-between mb-5">
+        <h3 id="modal-service-title" class="font-display text-xl font-bold text-white tracking-tight">Cadastrar Serviço</h3>
+        <button onclick="closeModal('modal-service')" class="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-obsidian-800">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <form id="service-form" class="space-y-3.5">
+        <input type="hidden" id="service-id" />
+        <div>
+          <label class="block text-xs font-semibold text-zinc-400 mb-1">Nome do Serviço</label>
+          <input type="text" id="service-name" required placeholder="Ex: Corte Degradê Premium"
+            class="w-full bg-obsidian-900 border border-zinc-800 focus:border-gold-500 rounded-xl px-3.5 py-2.5 text-sm text-white outline-none" />
+        </div>
+        <div class="grid grid-cols-3 gap-2.5">
+          <div>
+            <label class="block text-xs font-semibold text-zinc-400 mb-1">Preço (R$)</label>
+            <input type="number" id="service-price" min="1" step="0.01" required placeholder="65"
+              class="w-full bg-obsidian-900 border border-zinc-800 focus:border-gold-500 rounded-xl px-3 py-2.5 text-sm text-white outline-none" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-zinc-400 mb-1">Duração (min)</label>
+            <input type="number" id="service-duration" min="10" step="5" required placeholder="45"
+              class="w-full bg-obsidian-900 border border-zinc-800 focus:border-gold-500 rounded-xl px-3 py-2.5 text-sm text-white outline-none" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-zinc-400 mb-1">Comissão (%)</label>
+            <input type="number" id="service-commission" min="0" max="100" required placeholder="45"
+              class="w-full bg-obsidian-900 border border-zinc-800 focus:border-gold-500 rounded-xl px-3 py-2.5 text-sm text-gold-300 font-semibold outline-none" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-zinc-400 mb-1">Descrição</label>
+          <textarea id="service-desc" rows="3" required placeholder="Descreva os detalhes do procedimento..."
+            class="w-full bg-obsidian-900 border border-zinc-800 focus:border-gold-500 rounded-xl px-3.5 py-2.5 text-sm text-white outline-none resize-none"></textarea>
+        </div>
+        <div class="flex gap-2.5 pt-2">
+          <button type="button" onclick="closeModal('modal-service')" class="flex-1 py-2.5 rounded-xl bg-obsidian-800 text-zinc-300 text-sm font-semibold">Cancelar</button>
+          <button type="submit" class="flex-1 py-2.5 rounded-xl gold-gradient text-obsidian-950 text-sm font-bold">Salvar Serviço</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Novo Agendamento Manual -->
+  <div id="modal-appointment" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="w-full max-w-md glass-card rounded-3xl p-6 animate-slide-up max-h-[92vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="font-display text-xl font-bold text-white tracking-tight">Novo Agendamento Manual</h3>
+        <button onclick="closeModal('modal-appointment')" class="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-obsidian-800">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <form id="manual-appointment-form" class="space-y-3.5">
+        <div>
+          <label class="block text-xs font-semibold text-zinc-400 mb-1">Nome do Cliente</label>
+          <input type="text" id="manual-client-name" required placeholder="Nome completo"
+            class="w-full bg-obsidian-900 border border-zinc-800 focus:border-gold-500 rounded-xl px-3.5 py-2.5 text-sm text-white outline-none" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-zinc-400 mb-1">WhatsApp</label>
+          <input type="tel" id="manual-client-wa" oninput="maskPhone(this)" maxlength="15" required placeholder="(11) 99999-9999"
+            class="w-full bg-obsidian-900 border border-zinc-800 focus:border-gold-500 rounded-xl px-3.5 py-2.5 text-sm text-white outline-none" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-zinc-400 mb-1">Serviço</label>
+          <select id="manual-service" onchange="checkManualAvailability()" required class="w-full bg-obsidian-900 border border-zinc-800 focus:border-gold-500 rounded-xl px-3.5 py-2.5 text-sm text-white outline-none"></select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-zinc-400 mb-1">Profissional</label>
+          <select id="manual-prof" onchange="checkManualAvailability()" required class="w-full bg-obsidian-900 border border-zinc-800 focus:border-gold-500 rounded-xl px-3.5 py-2.5 text-sm text-white outline-none"></select>
+        </div>
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-xs font-semibold text-zinc-400 mb-1">Data</label>
+            <input type="date" id="manual-date" onchange="checkManualAvailability()" required class="w-full bg-obsidian-900 border border-zinc-800 focus:border-gold-500 rounded-xl px-3 py-2.5 text-sm text-white outline-none" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-zinc-400 mb-1">Horário</label>
+            <input type="time" id="manual-time" onchange="checkManualAvailability()" required class="w-full bg-obsidian-900 border border-zinc-800 focus:border-gold-500 rounded-xl px-3 py-2.5 text-sm text-white outline-none" />
+          </div>
+        </div>
+        <div id="manual-availability-hint" class="text-xs rounded-xl px-3 py-2 border"></div>
+        <div class="flex gap-2.5 pt-2">
+          <button type="button" onclick="closeModal('modal-appointment')" class="flex-1 py-2.5 rounded-xl bg-obsidian-800 text-zinc-300 text-sm font-semibold">Cancelar</button>
+          <button type="submit" class="flex-1 py-2.5 rounded-xl gold-gradient text-obsidian-950 text-sm font-bold">Criar Reserva</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Histórico do Cliente -->
+  <div id="modal-client-history" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="w-full max-w-lg glass-card rounded-3xl p-6 animate-slide-up max-h-[85vh] flex flex-col">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h3 id="history-client-name" class="font-display text-xl font-bold text-white tracking-tight">Histórico</h3>
+          <p id="history-client-wa" class="text-xs text-gold-400 font-medium"></p>
+        </div>
+        <button onclick="closeModal('modal-client-history')" class="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-obsidian-800">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div id="history-list" class="space-y-2.5 overflow-y-auto flex-1 pr-1"></div>
+    </div>
+  </div>
+
+  <!-- Modal: Link Rápido & QR Code -->
+  <div id="modal-share" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="w-full max-w-md glass-card rounded-3xl p-6 text-center animate-slide-up">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-bold uppercase tracking-wider text-gold-400">Autoatendimento</span>
+        <button onclick="closeModal('modal-share')" class="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-obsidian-800">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div class="mx-auto w-36 px-2 py-1 rounded-xl bg-black/70 border border-gold-500/15 mb-2">
+        <svg class="w-full h-auto block" role="img" aria-label="Villa 28 Barbearia">
+          <use href="#villa28-logo" />
+        </svg>
+      </div>
+      <h3 class="font-display text-xl font-bold text-white tracking-tight">Link Direto & QR Code</h3>
+      <p class="text-xs text-zinc-400 mt-1">Envie para clientes agendarem sozinhos pelo celular.</p>
+
+      <div class="my-5 inline-block p-3.5 bg-white rounded-2xl shadow-lg">
+        <div id="modal-qrcode" class="w-40 h-40 flex items-center justify-center"></div>
+      </div>
+
+      <div class="bg-obsidian-900 border border-zinc-800 rounded-xl p-2.5 flex items-center gap-2 mb-4">
+        <input type="text" readonly id="modal-share-link" class="w-full bg-transparent text-xs text-gold-300 font-mono outline-none" />
+        <button onclick="copyBookingLink()" class="shrink-0 px-3 py-1.5 rounded-lg gold-gradient text-obsidian-950 text-xs font-bold">Copiar</button>
+      </div>
+
+      <button onclick="closeModal('modal-share'); switchView('client');" class="w-full py-3 rounded-xl bg-obsidian-800 hover:bg-obsidian-700 border border-gold-500/30 text-gold-300 text-sm font-semibold transition flex items-center justify-center gap-2">
+        <i data-lucide="smartphone" class="w-4 h-4"></i>
+        <span>Abrir Simulação do Cliente Agora</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- LÓGICA COMPLETA EM VANILLA JAVASCRIPT                                 -->
+  <!-- ===================================================================== -->
+  <script>
+    // =========================================================================
+    // 1. ESTADO GLOBAL, STORAGE & SEED INICIAL
+    // =========================================================================
+    const STORAGE_KEY = 'villa28_salon_system_v1';
+    const SESSION_KEY = 'villa28_salon_session_v1';
+
+    const WEEKDAY_NAMES = {
+      1: 'Segunda-feira',
+      2: 'Terça-feira',
+      3: 'Quarta-feira',
+      4: 'Quinta-feira',
+      5: 'Sexta-feira',
+      6: 'Sábado',
+      0: 'Domingo'
+    };
+    const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
+
+    function getDateStr(offsetDays = 0) {
+      const d = new Date();
+      d.setDate(d.getDate() + offsetDays);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    const TODAY = getDateStr(0);
+    const TOMORROW = getDateStr(1);
+    const YESTERDAY = getDateStr(-1);
+
+    const DEFAULT_WEEKLY_HOURS = {
+      1: { open: true, start: '09:00', end: '20:00' },
+      2: { open: true, start: '09:00', end: '20:00' },
+      3: { open: true, start: '09:00', end: '20:00' },
+      4: { open: true, start: '09:00', end: '20:00' },
+      5: { open: true, start: '09:00', end: '20:00' },
+      6: { open: true, start: '09:00', end: '18:00' },
+      0: { open: false, start: '09:00', end: '13:00' }
+    };
+
+    const DEFAULT_DB = {
+      settings: {
+        name: 'Villa 28 Barbearia',
+        slotInterval: 30,
+        whatsapp: '5511999998888',
+        weeklyHours: JSON.parse(JSON.stringify(DEFAULT_WEEKLY_HOURS))
+      },
+      users: [
+        { id: 'u1', name: 'Ricardo Almeida', username: 'dono', password: '123', role: 'owner', specialty: 'Master Barber & Dono', lunch: { enabled: true, start: '12:30', end: '13:30' } },
+        { id: 'u2', name: 'Lucas Mendes', username: 'lucas', password: '123', role: 'collaborator', specialty: 'Barbeiro Visagista', lunch: { enabled: true, start: '12:00', end: '13:00' } },
+        { id: 'u3', name: 'Camila Rocha', username: 'camila', password: '123', role: 'collaborator', specialty: 'Hair Stylist & Colorista', lunch: { enabled: true, start: '13:00', end: '14:00' } }
+      ],
+      blockedSlots: [],
+      services: [
+        { id: 's1', name: 'Corte Degradê Navalhado', price: 65, duration: 45, commissionPct: 45, description: 'Corte personalizado com acabamento na navalha, lavagem e pomada modeladora.' },
+        { id: 's2', name: 'Barba Terapia Real', price: 50, duration: 30, commissionPct: 50, description: 'Toalha quente, óleos essenciais, esfoliação facial e alinhamento preciso.' },
+        { id: 's3', name: 'Combo Villa 28 (Corte + Barba)', price: 105, duration: 60, commissionPct: 45, description: 'Experiência completa de corte visagista e barba terapia com massagem.' },
+        { id: 's4', name: 'Escova & Finalização Luxo', price: 90, duration: 60, commissionPct: 40, description: 'Lavagem nutritiva com escova modeladora e proteção térmica.' },
+        { id: 's5', name: 'Hidratação Profunda & Brilho', price: 120, duration: 45, commissionPct: 40, description: 'Tratamento reconstrutor intensivo para maciez e vitalidade dos fios.' }
+      ],
+      clients: [
+        { id: 'c1', name: 'Gabriel Ferreira', whatsapp: '(11) 98765-4321' },
+        { id: 'c2', name: 'Mariana Costa', whatsapp: '(11) 97654-3210' },
+        { id: 'c3', name: 'Thiago Oliveira', whatsapp: '(11) 96543-2109' },
+        { id: 'c4', name: 'Fernanda Lima', whatsapp: '(11) 95432-1098' }
+      ],
+      appointments: [
+        {
+          id: 'a1', clientId: 'c1', clientName: 'Gabriel Ferreira', clientWhatsapp: '(11) 98765-4321',
+          serviceId: 's3', serviceName: 'Combo Villa 28 (Corte + Barba)', price: 105, duration: 60, commissionPct: 45,
+          professionalId: 'u2', professionalName: 'Lucas Mendes', date: TODAY, time: '10:00',
+          status: 'Concluído', source: 'autoatendimento', createdAt: new Date().toISOString()
+        },
+        {
+          id: 'a2', clientId: 'c2', clientName: 'Mariana Costa', clientWhatsapp: '(11) 97654-3210',
+          serviceId: 's4', serviceName: 'Escova & Finalização Luxo', price: 90, duration: 60, commissionPct: 40,
+          professionalId: 'u3', professionalName: 'Camila Rocha', date: TODAY, time: '14:00',
+          status: 'Confirmado', source: 'manual', createdAt: new Date().toISOString()
+        },
+        {
+          id: 'a3', clientId: 'c3', clientName: 'Thiago Oliveira', clientWhatsapp: '(11) 96543-2109',
+          serviceId: 's1', serviceName: 'Corte Degradê Navalhado', price: 65, duration: 45, commissionPct: 45,
+          professionalId: 'u2', professionalName: 'Lucas Mendes', date: TODAY, time: '16:30',
+          status: 'Pendente', source: 'autoatendimento', createdAt: new Date().toISOString()
+        },
+        {
+          id: 'a4', clientId: 'c4', clientName: 'Fernanda Lima', clientWhatsapp: '(11) 95432-1098',
+          serviceId: 's5', serviceName: 'Hidratação Profunda & Brilho', price: 120, duration: 45, commissionPct: 40,
+          professionalId: 'u3', professionalName: 'Camila Rocha', date: TOMORROW, time: '11:00',
+          status: 'Pendente', source: 'autoatendimento', createdAt: new Date().toISOString()
+        },
+        {
+          id: 'a5', clientId: 'c1', clientName: 'Gabriel Ferreira', clientWhatsapp: '(11) 98765-4321',
+          serviceId: 's2', serviceName: 'Barba Terapia Real', price: 50, duration: 30, commissionPct: 50,
+          professionalId: 'u1', professionalName: 'Ricardo Almeida', date: YESTERDAY, time: '18:00',
+          status: 'Concluído', source: 'manual', createdAt: new Date().toISOString()
+        }
+      ]
+    };
+
+    function migrateDB(data) {
+      if (!data.settings) data.settings = JSON.parse(JSON.stringify(DEFAULT_DB.settings));
+      if (!data.settings.weeklyHours) data.settings.weeklyHours = JSON.parse(JSON.stringify(DEFAULT_WEEKLY_HOURS));
+      if (!data.settings.slotInterval) data.settings.slotInterval = 30;
+      if (!Array.isArray(data.blockedSlots)) data.blockedSlots = [];
+      (data.users || []).forEach((u, idx) => {
+        if (!u.lunch) {
+          const fallback = [{ enabled: true, start: '12:30', end: '13:30' }, { enabled: true, start: '12:00', end: '13:00' }, { enabled: true, start: '13:00', end: '14:00' }];
+          u.lunch = fallback[idx] || { enabled: true, start: '12:00', end: '13:00' };
+        }
+      });
+      return data;
+    }
+
+    let db = loadDB();
+    let currentUser = loadSession();
+    let currentAdminTab = 'agenda';
+    let pendingAdminNotification = null;
+
+    let wizardState = {
+      step: 1,
+      serviceId: null,
+      professionalId: null,
+      date: TODAY,
+      time: null
+    };
+
+    function loadDB() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) {
+        const fresh = JSON.parse(JSON.stringify(DEFAULT_DB));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh));
+        return fresh;
+      }
+      try {
+        return migrateDB(JSON.parse(raw));
+      } catch {
+        const fresh = JSON.parse(JSON.stringify(DEFAULT_DB));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh));
+        return fresh;
+      }
+    }
+
+    function saveDB() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+    }
+
+    function loadSession() {
+      const raw = localStorage.getItem(SESSION_KEY);
+      if (!raw) return null;
+      try { return JSON.parse(raw); } catch { return null; }
+    }
+
+    function saveSession(user) {
+      currentUser = user;
+      if (user) localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+      else localStorage.removeItem(SESSION_KEY);
+    }
+
+    // =========================================================================
+    // 2. UTILITÁRIOS, VALIDAÇÃO DE HORÁRIOS/TRAVAS E TOAST EM TEMPO REAL
+    // =========================================================================
+    function formatBRL(val) {
+      return Number(val || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function formatDateBR(dateStr) {
+      if (!dateStr) return '-';
+      const [y, m, d] = dateStr.split('-');
+      return `${d}/${m}/${y}`;
+    }
+
+    function getDayOfWeek(dateStr) {
+      const [y, m, d] = dateStr.split('-').map(Number);
+      return new Date(y, m - 1, d).getDay();
+    }
+
+    function timeToMinutes(t) {
+      const [h, m] = t.split(':').map(Number);
+      return h * 60 + m;
+    }
+
+    function minutesToTime(min) {
+      const h = String(Math.floor(min / 60)).padStart(2, '0');
+      const m = String(min % 60).padStart(2, '0');
+      return `${h}:${m}`;
+    }
+
+    function maskPhone(input) {
+      let v = input.value.replace(/\D/g, '').slice(0, 11);
+      if (v.length > 6) {
+        input.value = `(${v.slice(0, 2)}) ${v.slice(2, 7)}-${v.slice(7)}`;
+      } else if (v.length > 2) {
+        input.value = `(${v.slice(0, 2)}) ${v.slice(2)}`;
+      } else if (v.length > 0) {
+        input.value = `(${v}`;
+      }
+    }
+
+    function cleanDigits(str) {
+      return String(str || '').replace(/\D/g, '');
+    }
+
+    function getProfName(profId, fallbackName = '') {
+      return db.users.find(u => u.id === profId)?.name || fallbackName || 'Profissional';
+    }
+
+    function getSlotBlockReason(dateStr, profId, startMin, endMin) {
+      const dow = getDayOfWeek(dateStr);
+      const dayCfg = db.settings.weeklyHours[dow];
+      if (!dayCfg || !dayCfg.open) {
+        return `Barbearia fechada (${WEEKDAY_NAMES[dow]})`;
+      }
+
+      const openMin = timeToMinutes(dayCfg.start);
+      const closeMin = timeToMinutes(dayCfg.end);
+      if (startMin < openMin || endMin > closeMin) {
+        return `Fora do expediente (${dayCfg.start} às ${dayCfg.end})`;
+      }
+
+      const prof = db.users.find(u => u.id === profId);
+      if (prof?.lunch?.enabled) {
+        const lStart = timeToMinutes(prof.lunch.start);
+        const lEnd = timeToMinutes(prof.lunch.end);
+        if (startMin < lEnd && endMin > lStart) {
+          return `Almoço de ${prof.name} (${prof.lunch.start}–${prof.lunch.end})`;
+        }
+      }
+
+      const blk = db.blockedSlots.find(b => {
+        if (b.date !== dateStr) return false;
+        if (b.professionalId !== 'all' && b.professionalId !== profId) return false;
+        const bStart = timeToMinutes(b.start);
+        const bEnd = timeToMinutes(b.end);
+        return startMin < bEnd && endMin > bStart;
+      });
+      if (blk) {
+        return `Horário travado (${blk.start}–${blk.end}${blk.reason ? ': ' + blk.reason : ''})`;
+      }
+
+      return null;
+    }
+
+    function showToast({ title, message, type = 'gold', duration = 5500 }) {
+      const container = document.getElementById('toast-container');
+      const id = 'toast-' + Date.now() + Math.random().toString(16).slice(2);
+      const colors = {
+        gold: 'border-gold-500/60 bg-obsidian-900/95 text-white shadow-gold-500/20',
+        success: 'border-emerald-500/60 bg-obsidian-900/95 text-white shadow-emerald-500/20',
+        danger: 'border-red-500/60 bg-obsidian-900/95 text-white shadow-red-500/20'
+      };
+      const iconName = type === 'success' ? 'check-circle-2' : type === 'danger' ? 'alert-circle' : 'bell-ring';
+      const iconColor = type === 'success' ? 'text-emerald-400' : type === 'danger' ? 'text-red-400' : 'text-gold-400';
+
+      const el = document.createElement('div');
+      el.id = id;
+      el.className = `pointer-events-auto rounded-2xl border p-4 shadow-2xl backdrop-blur-md animate-slide-up flex items-start gap-3 ${colors[type]}`;
+      el.innerHTML = `
+        <div class="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center shrink-0 ${iconColor}">
+          <i data-lucide="${iconName}" class="w-5 h-5"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-xs font-bold uppercase tracking-wider ${iconColor}">${title}</p>
+          <p class="text-sm text-zinc-200 mt-0.5 leading-snug">${message}</p>
+        </div>
+        <button onclick="document.getElementById('${id}')?.remove()" class="text-zinc-500 hover:text-white">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      `;
+      container.appendChild(el);
+      lucide.createIcons();
+
+      setTimeout(() => {
+        const node = document.getElementById(id);
+        if (node) {
+          node.style.opacity = '0';
+          node.style.transform = 'translateX(20px)';
+          node.style.transition = 'all 0.25s ease';
+          setTimeout(() => node.remove(), 250);
+        }
+      }, duration);
+    }
+
+    // =========================================================================
+    // 3. ROTEAMENTO DE TELAS & AUTENTICAÇÃO
+    // =========================================================================
+    function renderQuickLoginButtons() {
+      const container = document.getElementById('login-quick-list');
+      if (!container) return;
+      container.innerHTML = db.users.map(u => {
+        const firstName = u.name.split(' ')[0];
+        const isDono = u.role === 'owner';
+        return `
+          <button type="button" onclick="quickLogin('${u.username}', '${u.password}')"
+            class="px-2.5 py-2 rounded-xl bg-obsidian-900 hover:bg-obsidian-800 border ${isDono ? 'border-gold-500/35' : 'border-zinc-800'} text-left transition">
+            <span class="block text-[11px] font-bold ${isDono ? 'text-gold-400' : 'text-zinc-200'} truncate">${firstName} (${isDono ? 'Dono' : 'Colab.'})</span>
+            <span class="block text-[10px] text-zinc-500 truncate">${u.username} / ${u.password}</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function switchView(view) {
+      document.getElementById('view-login').classList.add('hidden');
+      document.getElementById('view-admin').classList.add('hidden');
+      document.getElementById('view-client').classList.add('hidden');
+
+      if (view === 'login') {
+        renderQuickLoginButtons();
+        document.getElementById('view-login').classList.remove('hidden');
+      } else if (view === 'admin') {
+        if (!currentUser) return switchView('login');
+        document.getElementById('view-admin').classList.remove('hidden');
+        renderAdminHeaderAndPermissions();
+        setAdminTab(currentAdminTab);
+
+        if (pendingAdminNotification) {
+          showToast({
+            title: 'Novo Agendamento no Painel!',
+            message: pendingAdminNotification,
+            type: 'gold',
+            duration: 7000
+          });
+          pendingAdminNotification = null;
+        }
+      } else if (view === 'client') {
+        document.getElementById('view-client').classList.remove('hidden');
+        resetClientWizard();
+      }
+      lucide.createIcons();
+    }
+
+    function returnToAdminOrLogin() {
+      if (currentUser) switchView('admin');
+      else switchView('login');
+    }
+
+    document.getElementById('login-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const username = document.getElementById('login-username').value.trim().toLowerCase();
+      const password = document.getElementById('login-password').value.trim();
+      attemptLogin(username, password);
+    });
+
+    function quickLogin(username, password) {
+      document.getElementById('login-username').value = username;
+      document.getElementById('login-password').value = password;
+      attemptLogin(username, password);
+    }
+
+    function attemptLogin(username, password) {
+      const found = db.users.find(u => u.username.toLowerCase() === username && u.password === password);
+      const errEl = document.getElementById('login-error');
+      if (!found) {
+        errEl.textContent = 'Usuário ou senha inválidos.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+      errEl.classList.add('hidden');
+      saveSession(found);
+      switchView('admin');
+      showToast({
+        title: 'Bem-vindo(a)!',
+        message: `Logado como ${found.name} (${found.role === 'owner' ? 'Dono / Administrador' : 'Colaborador'}).`,
+        type: 'success'
+      });
+    }
+
+    function logout() {
+      saveSession(null);
+      switchView('login');
+    }
+
+    // =========================================================================
+    // 4. PAINEL DO ADMINISTRADOR (GESTÃO & PERMISSÕES)
+    // =========================================================================
+    function isOwner() {
+      return currentUser?.role === 'owner';
+    }
+
+    function renderAdminHeaderAndPermissions() {
+      document.getElementById('user-display-name').textContent = currentUser.name;
+      document.getElementById('user-avatar').textContent = currentUser.name.charAt(0).toUpperCase();
+      const badge = document.getElementById('user-role-badge');
+      if (isOwner()) {
+        badge.textContent = 'Dono (Acesso Total)';
+        badge.className = 'inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-gold-500/20 text-gold-300';
+      } else {
+        badge.textContent = 'Colaborador';
+        badge.className = 'inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-zinc-700/60 text-zinc-200';
+      }
+
+      document.getElementById('btn-add-service').classList.toggle('hidden', !isOwner());
+      document.getElementById('btn-add-member').classList.toggle('hidden', !isOwner());
+
+      const profFilterWrap = document.getElementById('filter-prof-wrapper');
+      const profSelect = document.getElementById('filter-professional');
+      if (isOwner()) {
+        profFilterWrap.classList.remove('hidden');
+        profSelect.innerHTML = `<option value="all">Todos</option>` +
+          db.users.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
+      } else {
+        profFilterWrap.classList.add('hidden');
+      }
+
+      const ruleText = document.getElementById('owner-rule-text');
+      ruleText.innerHTML = isOwner()
+        ? 'Como <strong>Dono</strong>, você pode alterar o status e aprovar comissões.'
+        : 'Modo <strong>Colaborador</strong>: somente o Dono altera status para aprovar comissões.';
+
+      renderStats();
+    }
+
+    function setAdminTab(tab) {
+      currentAdminTab = tab;
+      document.querySelectorAll('.admin-tab-content').forEach(el => el.classList.add('hidden'));
+      document.getElementById(`tab-${tab}`).classList.remove('hidden');
+
+      document.querySelectorAll('.admin-tab-btn').forEach(btn => {
+        const active = btn.dataset.tab === tab;
+        btn.className = active
+          ? 'admin-tab-btn shrink-0 flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition bg-gold-500/15 text-gold-300 border border-gold-500/30'
+          : 'admin-tab-btn shrink-0 flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition text-zinc-400 hover:text-white hover:bg-obsidian-800';
+      });
+
+      const titles = {
+        agenda: ['Agenda & Agendamentos', 'Gerencie horários, aprovações e reservas automáticas.'],
+        schedule: ['Horários & Bloqueios', 'Trave horários da barbearia (Seg–Sex, Sáb e Dom), almoços e bloqueios pontuais.'],
+        team: ['Equipe & Colaboradores', 'Adicione colaboradores, altere nomes, funções e senhas de acesso.'],
+        services: ['Gestão de Serviços', 'Cadastre serviços, preços, durações e comissões.'],
+        clients: ['Base de Clientes', 'Contatos de WhatsApp e histórico completo de atendimentos.'],
+        commissions: ['Relatório de Comissões', 'Acompanhe os ganhos aprovados pelo dono da barbearia.'],
+        share: ['Link de Autoatendimento & QR Code', 'Compartilhe com seus clientes para agendarem sozinhos.']
+      };
+      document.getElementById('tab-title').textContent = titles[tab][0];
+      document.getElementById('tab-subtitle').textContent = titles[tab][1];
+
+      renderStats();
+      if (tab === 'agenda') { renderAdminHeaderAndPermissions(); renderAgenda(); }
+      if (tab === 'schedule') renderScheduleSettings();
+      if (tab === 'team') renderTeam();
+      if (tab === 'services') renderServices();
+      if (tab === 'clients') renderClients();
+      if (tab === 'commissions') renderCommissions();
+      if (tab === 'share') renderShareLinks();
+      lucide.createIcons();
+    }
+
+    function renderStats() {
+      const relevantAppointments = isOwner()
+        ? db.appointments
+        : db.appointments.filter(a => a.professionalId === currentUser.id);
+
+      const todayCount = relevantAppointments.filter(a => a.date === TODAY && a.status !== 'Cancelado').length;
+      const pendingCount = relevantAppointments.filter(a => a.status === 'Pendente').length;
+
+      document.getElementById('stat-today').textContent = todayCount;
+      document.getElementById('stat-pending').textContent = pendingCount;
+      document.getElementById('stat-services').textContent = db.services.length;
+      document.getElementById('stat-clients').textContent = db.clients.length;
+    }
+
+    // ---- EQUIPE / COLABORADORES (CRUD + SENHA DE ACESSO) ----
+    function togglePasswordField(inputId, btn) {
+      const input = document.getElementById(inputId);
+      const isPass = input.type === 'password';
+      input.type = isPass ? 'text' : 'password';
+      btn.innerHTML = `<i data-lucide="${isPass ? 'eye-off' : 'eye'}" class="w-4 h-4"></i>`;
+      lucide.createIcons();
+    }
+
+    function renderTeam() {
+      const grid = document.getElementById('team-grid');
+      const ownerAccess = isOwner();
+
+      grid.innerHTML = db.users.map(u => {
+        const isDono = u.role === 'owner';
+        const isSelf = u.id === currentUser.id;
+        return `
+          <div class="glass-card rounded-2xl p-5 flex flex-col justify-between gap-4 hover:border-gold-500/40 transition">
+            <div>
+              <div class="flex items-start justify-between gap-3">
+                <div class="flex items-center gap-3 min-w-0">
+                  <div class="w-11 h-11 rounded-full ${isDono ? 'gold-gradient text-obsidian-950' : 'bg-gold-500/20 text-gold-300 border border-gold-500/30'} font-bold text-base flex items-center justify-center shrink-0">
+                    ${u.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div class="min-w-0">
+                    <h3 class="font-display font-bold text-base text-white truncate">${u.name}</h3>
+                    <p class="text-xs text-zinc-400 truncate">${u.specialty}</p>
+                  </div>
+                </div>
+                <span class="shrink-0 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${isDono ? 'bg-gold-500/20 text-gold-300 border border-gold-500/30' : 'bg-zinc-800 text-zinc-300'}">
+                  ${isDono ? 'Dono' : 'Colaborador'}
+                </span>
+              </div>
+
+              ${ownerAccess ? `
+                <div class="mt-4 p-3 rounded-xl bg-obsidian-900 border border-zinc-800 space-y-1.5 text-xs">
+                  <div class="flex items-center justify-between">
+                    <span class="text-zinc-400">Usuário de login:</span>
+                    <span class="font-mono font-semibold text-gold-300">${u.username}</span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-zinc-400">Senha de acesso:</span>
+                    <span class="font-mono font-semibold text-white">${u.password}</span>
+                  </div>
+                </div>` : ''}
+            </div>
+
+            ${ownerAccess ? `
+              <div class="flex items-center gap-2 pt-1">
+                <button onclick="openTeamModal('${u.id}')" class="flex-1 py-2 rounded-xl bg-obsidian-800 hover:bg-obsidian-700 text-xs font-semibold text-zinc-200 transition flex items-center justify-center gap-1.5">
+                  <i data-lucide="pencil" class="w-3.5 h-3.5"></i> Editar Dados / Senha
+                </button>
+                ${!isSelf ? `
+                  <button onclick="deleteTeamMember('${u.id}')" title="Remover colaborador" class="py-2 px-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 transition">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                  </button>` : ''}
+              </div>` : `<div class="text-[11px] text-zinc-500 text-center py-1">Gerenciamento exclusivo do Dono</div>`}
+          </div>
+        `;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    function openTeamModal(id = null) {
+      if (!isOwner()) return;
+      const member = id ? db.users.find(u => u.id === id) : null;
+      document.getElementById('modal-team-title').textContent = member ? 'Editar Colaborador' : 'Adicionar Colaborador';
+      document.getElementById('team-id').value = member ? member.id : '';
+      document.getElementById('team-name').value = member ? member.name : '';
+      document.getElementById('team-specialty').value = member ? member.specialty : '';
+      document.getElementById('team-username').value = member ? member.username : '';
+      const passInput = document.getElementById('team-password');
+      passInput.type = 'password';
+      passInput.value = member ? member.password : '';
+      document.getElementById('team-role').value = member ? member.role : 'collaborator';
+      document.getElementById('team-form-error').classList.add('hidden');
+      document.getElementById('modal-team').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    document.getElementById('team-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!isOwner()) return;
+
+      const id = document.getElementById('team-id').value;
+      const name = document.getElementById('team-name').value.trim();
+      const specialty = document.getElementById('team-specialty').value.trim();
+      const username = document.getElementById('team-username').value.trim().toLowerCase().replace(/\s+/g, '');
+      const password = document.getElementById('team-password').value.trim();
+      const role = document.getElementById('team-role').value;
+      const errEl = document.getElementById('team-form-error');
+
+      if (!username || !password) {
+        errEl.textContent = 'Preencha usuário e senha válidos.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      const duplicate = db.users.find(u => u.username.toLowerCase() === username && u.id !== id);
+      if (duplicate) {
+        errEl.textContent = `O usuário "${username}" já está em uso por outro membro.`;
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      // Garante que sempre exista pelo menos 1 Dono
+      if (id && role !== 'owner') {
+        const otherOwners = db.users.filter(u => u.role === 'owner' && u.id !== id);
+        if (!otherOwners.length) {
+          errEl.textContent = 'O sistema precisa de pelo menos um Dono cadastrado.';
+          errEl.classList.remove('hidden');
+          return;
+        }
+      }
+
+      errEl.classList.add('hidden');
+
+      if (id) {
+        const idx = db.users.findIndex(u => u.id === id);
+        if (idx >= 0) {
+          db.users[idx] = {
+            ...db.users[idx],
+            name,
+            specialty,
+            username,
+            password,
+            role
+          };
+          // Atualiza nome nos agendamentos existentes deste colaborador
+          db.appointments.forEach(a => {
+            if (a.professionalId === id) a.professionalName = name;
+          });
+          // Atualiza sessão se editou o próprio usuário logado
+          if (currentUser.id === id) {
+            saveSession(db.users[idx]);
+          }
+        }
+      } else {
+        db.users.push({
+          id: 'u' + Date.now(),
+          name,
+          specialty,
+          username,
+          password,
+          role,
+          lunch: { enabled: true, start: '12:00', end: '13:00' }
+        });
+      }
+
+      saveDB();
+      closeModal('modal-team');
+      renderAdminHeaderAndPermissions();
+      renderTeam();
+      showToast({
+        title: id ? 'Colaborador Atualizado' : 'Colaborador Adicionado!',
+        message: `${name} (${username}) salvo com sucesso.`,
+        type: 'success'
+      });
+    });
+
+    function deleteTeamMember(id) {
+      if (!isOwner()) return;
+      if (id === currentUser.id) {
+        return showToast({ title: 'Ação Bloqueada', message: 'Você não pode excluir o usuário atualmente logado.', type: 'danger' });
+      }
+      const target = db.users.find(u => u.id === id);
+      if (!target) return;
+      if (target.role === 'owner' && db.users.filter(u => u.role === 'owner').length <= 1) {
+        return showToast({ title: 'Ação Bloqueada', message: 'Deve existir pelo menos um Dono no sistema.', type: 'danger' });
+      }
+      if (!confirm(`Remover "${target.name}" da equipe?`)) return;
+
+      db.users = db.users.filter(u => u.id !== id);
+      saveDB();
+      renderAdminHeaderAndPermissions();
+      renderTeam();
+      showToast({ title: 'Membro Removido', message: `${target.name} foi removido da equipe.`, type: 'success' });
+    }
+
+    // ---- AGENDA ----
+    function clearDateFilter() {
+      document.getElementById('filter-date').value = '';
+      renderAgenda();
+    }
+
+    function renderAgendaLocksSummary(dateFilter) {
+      const targetDate = dateFilter || TODAY;
+      const dow = getDayOfWeek(targetDate);
+      const dayCfg = db.settings.weeklyHours[dow];
+      const box = document.getElementById('agenda-locks-summary');
+
+      const dayText = dayCfg?.open
+        ? `<span class="text-emerald-400 font-semibold">${WEEKDAY_NAMES[dow]} (${formatDateBR(targetDate)}):</span> ${dayCfg.start} às ${dayCfg.end}`
+        : `<span class="text-red-400 font-semibold">${WEEKDAY_NAMES[dow]} (${formatDateBR(targetDate)}): Fechado</span>`;
+
+      const lunches = db.users
+        .filter(u => u.lunch?.enabled)
+        .map(u => `${u.name.split(' ')[0]} (${u.lunch.start}–${u.lunch.end})`)
+        .join(' • ');
+
+      const dateBlocks = db.blockedSlots.filter(b => b.date === targetDate);
+      const blocksHtml = dateBlocks.length
+        ? `<span class="text-red-300"><strong class="text-red-400">Travas em ${formatDateBR(targetDate)}:</strong> ${dateBlocks.map(b => `${b.start}–${b.end} (${b.professionalId === 'all' ? 'Todos' : getProfName(b.professionalId).split(' ')[0]})`).join(', ')}</span>`
+        : '';
+
+      box.innerHTML = `
+        <span class="flex items-center gap-1.5"><i data-lucide="clock" class="w-3.5 h-3.5 text-gold-400"></i> ${dayText}</span>
+        <span class="flex items-center gap-1.5"><i data-lucide="utensils" class="w-3.5 h-3.5 text-amber-400"></i> <strong>Almoços:</strong> ${lunches || 'Nenhum bloqueado'}</span>
+        ${blocksHtml}
+      `;
+    }
+
+    function renderAgenda() {
+      const dateFilter = document.getElementById('filter-date').value;
+      const statusFilter = document.getElementById('filter-status').value;
+      const profFilter = isOwner() ? document.getElementById('filter-professional').value : currentUser.id;
+
+      renderAgendaLocksSummary(dateFilter);
+
+      let list = db.appointments.filter(a => {
+        if (dateFilter && a.date !== dateFilter) return false;
+        if (statusFilter !== 'all' && a.status !== statusFilter) return false;
+        if (profFilter !== 'all' && a.professionalId !== profFilter) return false;
+        return true;
+      });
+
+      list.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+
+      const tbody = document.getElementById('agenda-tbody');
+      const empty = document.getElementById('agenda-empty');
+
+      if (!list.length) {
+        tbody.innerHTML = '';
+        empty.classList.remove('hidden');
+        lucide.createIcons();
+        return;
+      }
+
+      empty.classList.add('hidden');
+      const statusBadges = {
+        'Pendente': 'bg-amber-500/15 text-amber-400 border-amber-500/30',
+        'Confirmado': 'bg-sky-500/15 text-sky-400 border-sky-500/30',
+        'Concluído': 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+        'Cancelado': 'bg-red-500/15 text-red-400 border-red-500/30'
+      };
+
+      tbody.innerHTML = list.map(a => {
+        const commValue = (Number(a.price) * Number(a.commissionPct || 0)) / 100;
+        const waDigits = cleanDigits(a.clientWhatsapp);
+        const profName = getProfName(a.professionalId, a.professionalName);
+        const statusControl = isOwner()
+          ? `<select onchange="updateAppointmentStatus('${a.id}', this.value)"
+                class="text-xs font-semibold rounded-lg px-2.5 py-1.5 border outline-none cursor-pointer bg-obsidian-900 ${statusBadges[a.status]}">
+                <option value="Pendente" ${a.status === 'Pendente' ? 'selected' : ''}>Pendente</option>
+                <option value="Confirmado" ${a.status === 'Confirmado' ? 'selected' : ''}>Confirmado</option>
+                <option value="Concluído" ${a.status === 'Concluído' ? 'selected' : ''}>Concluído (Aprova Comissão)</option>
+                <option value="Cancelado" ${a.status === 'Cancelado' ? 'selected' : ''}>Cancelado</option>
+             </select>`
+          : `<span title="Somente o Dono pode alterar o status" class="inline-flex items-center gap-1.5 text-xs font-semibold rounded-lg px-2.5 py-1 border ${statusBadges[a.status]}">
+               <i data-lucide="lock" class="w-3 h-3 opacity-70"></i> ${a.status}
+             </span>`;
+
+        return `
+          <tr class="hover:bg-obsidian-900/40 transition">
+            <td class="py-3.5 px-4 whitespace-nowrap">
+              <div class="font-semibold text-white">${formatDateBR(a.date)}</div>
+              <div class="text-xs text-gold-400 font-medium">${a.time} (${a.duration} min)</div>
+            </td>
+            <td class="py-3.5 px-4">
+              <div class="font-semibold text-white flex items-center gap-1.5">
+                <span>${a.clientName}</span>
+                ${a.source === 'autoatendimento' ? '<span class="text-[10px] px-1.5 py-0.5 rounded bg-gold-500/15 text-gold-400 font-semibold">Auto</span>' : ''}
+              </div>
+              <a href="https://wa.me/55${waDigits}" target="_blank" class="text-xs text-emerald-400 hover:underline inline-flex items-center gap-1 mt-0.5">
+                <i data-lucide="message-circle" class="w-3 h-3"></i> ${a.clientWhatsapp}
+              </a>
+            </td>
+            <td class="py-3.5 px-4">
+              <div class="text-zinc-200 font-medium">${a.serviceName}</div>
+            </td>
+            <td class="py-3.5 px-4 text-zinc-300">${profName}</td>
+            <td class="py-3.5 px-4 whitespace-nowrap">
+              <div class="font-bold text-white">${formatBRL(a.price)}</div>
+              <div class="text-[11px] ${a.status === 'Concluído' ? 'text-emerald-400 font-semibold' : 'text-zinc-500'}">
+                Comissão (${a.commissionPct}%): ${formatBRL(commValue)} ${a.status === 'Concluído' ? '✓' : ''}
+              </div>
+            </td>
+            <td class="py-3.5 px-4">${statusControl}</td>
+            <td class="py-3.5 px-4 text-right whitespace-nowrap">
+              ${isOwner() ? `
+                <button onclick="deleteAppointment('${a.id}')" title="Excluir agendamento" class="p-2 rounded-lg text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition">
+                  <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>` : '<span class="text-[11px] text-zinc-600">—</span>'}
+            </td>
+          </tr>
+        `;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    function updateAppointmentStatus(id, newStatus) {
+      if (!isOwner()) {
+        return showToast({ title: 'Acesso Restrito', message: 'Somente o dono pode alterar status e aprovar comissões.', type: 'danger' });
+      }
+      const appt = db.appointments.find(a => a.id === id);
+      if (!appt) return;
+      appt.status = newStatus;
+      saveDB();
+      renderStats();
+      renderAgenda();
+      showToast({
+        title: 'Status Atualizado',
+        message: `${appt.clientName} marcado como "${newStatus}". ${newStatus === 'Concluído' ? 'Comissão aprovada para o colaborador!' : ''}`,
+        type: 'success'
+      });
+    }
+
+    function deleteAppointment(id) {
+      if (!isOwner()) return;
+      if (!confirm('Deseja realmente excluir este agendamento?')) return;
+      db.appointments = db.appointments.filter(a => a.id !== id);
+      saveDB();
+      renderStats();
+      renderAgenda();
+    }
+
+    // ---- HORÁRIOS & BLOQUEIOS ----
+    function renderScheduleSettings() {
+      const ownerAccess = isOwner();
+
+      document.getElementById('weekdays-bulk-box').classList.toggle('hidden', !ownerAccess);
+      document.getElementById('btn-save-weekly').classList.toggle('hidden', !ownerAccess);
+      document.getElementById('btn-save-lunch').classList.toggle('hidden', !ownerAccess);
+      document.getElementById('block-slot-form').classList.toggle('hidden', !ownerAccess);
+
+      const weeklyList = document.getElementById('weekly-hours-list');
+      weeklyList.innerHTML = WEEKDAY_ORDER.map(day => {
+        const cfg = db.settings.weeklyHours[day];
+        const isWeekend = day === 0 || day === 6;
+        return `
+          <div class="p-3 rounded-xl bg-obsidian-900 border ${isWeekend ? 'border-gold-500/20' : 'border-zinc-800'} flex flex-wrap items-center justify-between gap-2">
+            <label class="flex items-center gap-2.5 cursor-pointer min-w-[140px]">
+              <input type="checkbox" id="day-open-${day}" ${cfg.open ? 'checked' : ''} ${!ownerAccess ? 'disabled' : ''}
+                onchange="toggleDayRow(${day})"
+                class="w-4 h-4 accent-amber-500 rounded cursor-pointer" />
+              <span class="text-xs sm:text-sm font-semibold ${cfg.open ? 'text-white' : 'text-zinc-500 line-through'}">${WEEKDAY_NAMES[day]}</span>
+            </label>
+            <div id="day-times-${day}" class="flex items-center gap-2 ${!cfg.open ? 'opacity-40 pointer-events-none' : ''}">
+              <input type="time" id="day-start-${day}" value="${cfg.start}" ${!ownerAccess ? 'disabled' : ''}
+                class="bg-obsidian-950 border border-zinc-800 rounded-lg px-2.5 py-1 text-xs text-white outline-none focus:border-gold-500" />
+              <span class="text-xs text-zinc-500">às</span>
+              <input type="time" id="day-end-${day}" value="${cfg.end}" ${!ownerAccess ? 'disabled' : ''}
+                class="bg-obsidian-950 border border-zinc-800 rounded-lg px-2.5 py-1 text-xs text-white outline-none focus:border-gold-500" />
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const lunchList = document.getElementById('lunch-breaks-list');
+      lunchList.innerHTML = db.users.map(u => {
+        const lunch = u.lunch || { enabled: true, start: '12:00', end: '13:00' };
+        return `
+          <div class="p-3.5 rounded-xl bg-obsidian-900 border border-zinc-800 space-y-2.5">
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-full bg-gold-500/20 text-gold-300 font-bold text-xs flex items-center justify-center">${u.name.charAt(0)}</div>
+                <div>
+                  <p class="text-sm font-semibold text-white">${u.name}</p>
+                  <p class="text-[11px] text-zinc-400">${u.specialty}</p>
+                </div>
+              </div>
+              <label class="flex items-center gap-1.5 text-xs font-medium text-zinc-300 cursor-pointer">
+                <input type="checkbox" id="lunch-enabled-${u.id}" ${lunch.enabled ? 'checked' : ''} ${!ownerAccess ? 'disabled' : ''}
+                  onchange="toggleLunchRow('${u.id}')" class="w-4 h-4 accent-amber-500 rounded" />
+                <span>Bloquear almoço</span>
+              </label>
+            </div>
+            <div id="lunch-times-${u.id}" class="flex items-center gap-2 pt-1 ${!lunch.enabled ? 'opacity-40 pointer-events-none' : ''}">
+              <span class="text-xs text-zinc-400">Das</span>
+              <input type="time" id="lunch-start-${u.id}" value="${lunch.start}" ${!ownerAccess ? 'disabled' : ''}
+                class="bg-obsidian-950 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-gold-500" />
+              <span class="text-xs text-zinc-400">às</span>
+              <input type="time" id="lunch-end-${u.id}" value="${lunch.end}" ${!ownerAccess ? 'disabled' : ''}
+                class="bg-obsidian-950 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-gold-500" />
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('block-date').value = TODAY;
+      document.getElementById('block-prof').innerHTML = `<option value="all">Toda a Barbearia</option>` +
+        db.users.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
+
+      renderBlockedSlotsList();
+    }
+
+    function toggleDayRow(day) {
+      const checked = document.getElementById(`day-open-${day}`).checked;
+      const timesEl = document.getElementById(`day-times-${day}`);
+      timesEl.classList.toggle('opacity-40', !checked);
+      timesEl.classList.toggle('pointer-events-none', !checked);
+    }
+
+    function toggleLunchRow(userId) {
+      const checked = document.getElementById(`lunch-enabled-${userId}`).checked;
+      const timesEl = document.getElementById(`lunch-times-${userId}`);
+      timesEl.classList.toggle('opacity-40', !checked);
+      timesEl.classList.toggle('pointer-events-none', !checked);
+    }
+
+    function applyWeekdaysBulk() {
+      if (!isOwner()) return;
+      const start = document.getElementById('bulk-weekday-start').value;
+      const end = document.getElementById('bulk-weekday-end').value;
+      if (!start || !end || timeToMinutes(start) >= timeToMinutes(end)) {
+        return showToast({ title: 'Horário Inválido', message: 'O horário de início deve ser menor que o de término.', type: 'danger' });
+      }
+      [1, 2, 3, 4, 5].forEach(d => {
+        document.getElementById(`day-open-${d}`).checked = true;
+        document.getElementById(`day-start-${d}`).value = start;
+        document.getElementById(`day-end-${d}`).value = end;
+        toggleDayRow(d);
+      });
+      showToast({ title: 'Aplicado Seg–Sex', message: `Horário ${start} às ${end} preenchido de Segunda a Sexta. Clique em Salvar para confirmar.`, type: 'gold' });
+    }
+
+    function saveWeeklyHours() {
+      if (!isOwner()) return;
+      for (const day of WEEKDAY_ORDER) {
+        const open = document.getElementById(`day-open-${day}`).checked;
+        const start = document.getElementById(`day-start-${day}`).value;
+        const end = document.getElementById(`day-end-${day}`).value;
+        if (open && timeToMinutes(start) >= timeToMinutes(end)) {
+          return showToast({ title: 'Erro no Horário', message: `Em ${WEEKDAY_NAMES[day]}, o início deve ser anterior ao término.`, type: 'danger' });
+        }
+        db.settings.weeklyHours[day] = { open, start, end };
+      }
+      saveDB();
+      showToast({ title: 'Horários Salvos!', message: 'Funcionamento semanal atualizado no sistema e no autoatendimento.', type: 'success' });
+    }
+
+    function saveLunchBreaks() {
+      if (!isOwner()) return;
+      for (const u of db.users) {
+        const enabled = document.getElementById(`lunch-enabled-${u.id}`).checked;
+        const start = document.getElementById(`lunch-start-${u.id}`).value;
+        const end = document.getElementById(`lunch-end-${u.id}`).value;
+        if (enabled && timeToMinutes(start) >= timeToMinutes(end)) {
+          return showToast({ title: 'Erro no Almoço', message: `O horário de almoço de ${u.name} é inválido.`, type: 'danger' });
+        }
+        u.lunch = { enabled, start, end };
+      }
+      saveDB();
+      showToast({ title: 'Almoços Salvos!', message: 'Horários de almoço bloqueados com sucesso.', type: 'success' });
+    }
+
+    document.getElementById('block-slot-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!isOwner()) return;
+      const date = document.getElementById('block-date').value;
+      const professionalId = document.getElementById('block-prof').value;
+      const start = document.getElementById('block-start').value;
+      const end = document.getElementById('block-end').value;
+      const reason = document.getElementById('block-reason').value.trim();
+
+      if (timeToMinutes(start) >= timeToMinutes(end)) {
+        return showToast({ title: 'Intervalo Inválido', message: 'O horário inicial da trava deve ser menor que o final.', type: 'danger' });
+      }
+
+      db.blockedSlots.push({
+        id: 'blk' + Date.now(),
+        date,
+        professionalId,
+        start,
+        end,
+        reason
+      });
+      saveDB();
+      document.getElementById('block-reason').value = '';
+      renderBlockedSlotsList();
+      showToast({ title: 'Horário Travado!', message: `Bloqueio registrado para ${formatDateBR(date)} (${start}–${end}).`, type: 'success' });
+    });
+
+    function renderBlockedSlotsList() {
+      const container = document.getElementById('blocked-slots-list');
+      const sorted = [...db.blockedSlots].sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start));
+      if (!sorted.length) {
+        container.innerHTML = `<div class="col-span-full text-center py-6 rounded-xl bg-obsidian-900/50 border border-zinc-800 text-xs text-zinc-500">Nenhum horário travado pontualmente no momento.</div>`;
+        return;
+      }
+
+      container.innerHTML = sorted.map(b => {
+        const profName = b.professionalId === 'all' ? 'Toda a Barbearia' : getProfName(b.professionalId);
+        return `
+          <div class="p-3.5 rounded-xl bg-obsidian-900 border border-red-500/25 flex items-center justify-between gap-3">
+            <div>
+              <p class="text-xs font-bold text-red-400 flex items-center gap-1.5">
+                <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+                ${formatDateBR(b.date)} • ${b.start} às ${b.end}
+              </p>
+              <p class="text-xs text-white font-medium mt-0.5">${profName}</p>
+              ${b.reason ? `<p class="text-[11px] text-zinc-400 mt-0.5">${b.reason}</p>` : ''}
+            </div>
+            ${isOwner() ? `
+              <button onclick="removeBlockedSlot('${b.id}')" title="Destravar horário" class="px-2.5 py-1.5 rounded-lg bg-obsidian-800 hover:bg-emerald-500/20 text-zinc-300 hover:text-emerald-300 text-[11px] font-semibold transition flex items-center gap-1 shrink-0">
+                <i data-lucide="unlock" class="w-3 h-3"></i> Destravar
+              </button>` : ''}
+          </div>
+        `;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    function removeBlockedSlot(id) {
+      if (!isOwner()) return;
+      db.blockedSlots = db.blockedSlots.filter(b => b.id !== id);
+      saveDB();
+      renderBlockedSlotsList();
+      showToast({ title: 'Horário Destravado', message: 'O horário voltou a ficar disponível para reservas.', type: 'success' });
+    }
+
+    // ---- AGENDAMENTO MANUAL ----
+    function openManualAppointmentModal() {
+      const sSelect = document.getElementById('manual-service');
+      sSelect.innerHTML = db.services.map(s => `<option value="${s.id}">${s.name} — ${formatBRL(s.price)} (${s.duration} min)</option>`).join('');
+
+      const pSelect = document.getElementById('manual-prof');
+      const availableProfs = isOwner() ? db.users : [currentUser];
+      pSelect.innerHTML = availableProfs.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
+
+      document.getElementById('manual-date').value = TODAY;
+      document.getElementById('manual-time').value = '15:00';
+      document.getElementById('manual-client-name').value = '';
+      document.getElementById('manual-client-wa').value = '';
+      document.getElementById('modal-appointment').classList.remove('hidden');
+      checkManualAvailability();
+    }
+
+    function checkManualAvailability() {
+      const date = document.getElementById('manual-date').value;
+      const time = document.getElementById('manual-time').value;
+      const profId = document.getElementById('manual-prof').value;
+      const serviceId = document.getElementById('manual-service').value;
+      const hint = document.getElementById('manual-availability-hint');
+
+      const service = db.services.find(s => s.id === serviceId);
+      if (!date || !time || !profId || !service) {
+        hint.classList.add('hidden');
+        return;
+      }
+
+      const startMin = timeToMinutes(time);
+      const endMin = startMin + Number(service.duration);
+      const blockReason = getSlotBlockReason(date, profId, startMin, endMin);
+
+      const apptConflict = db.appointments.find(a => {
+        if (a.date !== date || a.professionalId !== profId || a.status === 'Cancelado') return false;
+        const aStart = timeToMinutes(a.time);
+        const aEnd = aStart + Number(a.duration);
+        return startMin < aEnd && endMin > aStart;
+      });
+
+      hint.classList.remove('hidden');
+      if (blockReason) {
+        hint.className = 'text-xs rounded-xl px-3 py-2 border border-red-500/30 bg-red-500/10 text-red-300';
+        hint.innerHTML = `<strong>Atenção (Horário Travado):</strong> ${blockReason}`;
+      } else if (apptConflict) {
+        hint.className = 'text-xs rounded-xl px-3 py-2 border border-amber-500/30 bg-amber-500/10 text-amber-300';
+        hint.innerHTML = `<strong>Conflito:</strong> Já existe reserva com ${apptConflict.clientName} às ${apptConflict.time}.`;
+      } else {
+        hint.className = 'text-xs rounded-xl px-3 py-2 border border-emerald-500/30 bg-emerald-500/10 text-emerald-300';
+        hint.innerHTML = `Horário livre e dentro do expediente (${time} às ${minutesToTime(endMin)}).`;
+      }
+    }
+
+    document.getElementById('manual-appointment-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('manual-client-name').value.trim();
+      const wa = document.getElementById('manual-client-wa').value.trim();
+      const serviceId = document.getElementById('manual-service').value;
+      const profId = document.getElementById('manual-prof').value;
+      const date = document.getElementById('manual-date').value;
+      const time = document.getElementById('manual-time').value;
+
+      const service = db.services.find(s => s.id === serviceId);
+      const prof = db.users.find(u => u.id === profId);
+      if (!service || !prof) return;
+
+      const startMin = timeToMinutes(time);
+      const blockReason = getSlotBlockReason(date, profId, startMin, startMin + Number(service.duration));
+      if (blockReason && !isOwner()) {
+        return showToast({ title: 'Horário Travado', message: `Não é possível agendar: ${blockReason}`, type: 'danger' });
+      }
+      if (blockReason && isOwner() && !confirm(`Este horário possui uma trava (${blockReason}). Deseja agendar mesmo assim?`)) {
+        return;
+      }
+
+      const client = upsertClient(name, wa);
+      const newAppt = {
+        id: 'a' + Date.now(),
+        clientId: client.id,
+        clientName: client.name,
+        clientWhatsapp: client.whatsapp,
+        serviceId: service.id,
+        serviceName: service.name,
+        price: service.price,
+        duration: service.duration,
+        commissionPct: service.commissionPct,
+        professionalId: prof.id,
+        professionalName: prof.name,
+        date,
+        time,
+        status: isOwner() ? 'Confirmado' : 'Pendente',
+        source: 'manual',
+        createdAt: new Date().toISOString()
+      };
+
+      db.appointments.push(newAppt);
+      saveDB();
+      closeModal('modal-appointment');
+      setAdminTab('agenda');
+      showToast({ title: 'Reserva Criada', message: `${name} agendado para ${formatDateBR(date)} às ${time}.`, type: 'success' });
+    });
+
+    // ---- GESTÃO DE SERVIÇOS ----
+    function renderServices() {
+      const grid = document.getElementById('services-grid');
+      grid.innerHTML = db.services.map(s => {
+        const commValue = (s.price * s.commissionPct) / 100;
+        return `
+          <div class="glass-card rounded-2xl p-5 flex flex-col justify-between hover:border-gold-500/40 transition">
+            <div>
+              <div class="flex items-start justify-between gap-2 mb-2">
+                <h3 class="font-display font-bold text-base text-white">${s.name}</h3>
+                <span class="shrink-0 font-bold text-gold-400 text-base">${formatBRL(s.price)}</span>
+              </div>
+              <p class="text-xs text-zinc-400 leading-relaxed mb-4">${s.description}</p>
+            </div>
+            <div>
+              <div class="flex items-center justify-between text-xs py-2.5 px-3 rounded-xl bg-obsidian-900/90 border border-zinc-800/80 mb-3">
+                <span class="text-zinc-300 flex items-center gap-1.5">
+                  <i data-lucide="clock" class="w-3.5 h-3.5 text-gold-400"></i> ${s.duration} min
+                </span>
+                <span class="text-emerald-400 font-semibold">
+                  Comissão: ${s.commissionPct}% (${formatBRL(commValue)})
+                </span>
+              </div>
+              ${isOwner() ? `
+                <div class="flex items-center gap-2">
+                  <button onclick="openServiceModal('${s.id}')" class="flex-1 py-2 rounded-xl bg-obsidian-800 hover:bg-obsidian-700 text-xs font-semibold text-zinc-200 transition flex items-center justify-center gap-1.5">
+                    <i data-lucide="pencil" class="w-3.5 h-3.5"></i> Editar
+                  </button>
+                  <button onclick="deleteService('${s.id}')" class="py-2 px-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 transition">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                  </button>
+                </div>` : `<div class="text-[11px] text-zinc-500 text-center py-1">Edição exclusiva do Dono</div>`}
+            </div>
+          </div>
+        `;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    function openServiceModal(id = null) {
+      if (!isOwner()) return;
+      const s = id ? db.services.find(x => x.id === id) : null;
+      document.getElementById('modal-service-title').textContent = s ? 'Editar Serviço' : 'Cadastrar Serviço';
+      document.getElementById('service-id').value = s ? s.id : '';
+      document.getElementById('service-name').value = s ? s.name : '';
+      document.getElementById('service-price').value = s ? s.price : '';
+      document.getElementById('service-duration').value = s ? s.duration : 45;
+      document.getElementById('service-commission').value = s ? s.commissionPct : 45;
+      document.getElementById('service-desc').value = s ? s.description : '';
+      document.getElementById('modal-service').classList.remove('hidden');
+    }
+
+    document.getElementById('service-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!isOwner()) return;
+      const id = document.getElementById('service-id').value;
+      const payload = {
+        id: id || ('s' + Date.now()),
+        name: document.getElementById('service-name').value.trim(),
+        price: parseFloat(document.getElementById('service-price').value),
+        duration: parseInt(document.getElementById('service-duration').value, 10),
+        commissionPct: parseFloat(document.getElementById('service-commission').value),
+        description: document.getElementById('service-desc').value.trim()
+      };
+
+      if (id) {
+        const idx = db.services.findIndex(x => x.id === id);
+        if (idx >= 0) db.services[idx] = payload;
+      } else {
+        db.services.push(payload);
+      }
+
+      saveDB();
+      closeModal('modal-service');
+      renderServices();
+      renderStats();
+      showToast({ title: 'Catálogo Atualizado', message: `Serviço "${payload.name}" salvo com sucesso.`, type: 'success' });
+    });
+
+    function deleteService(id) {
+      if (!isOwner()) return;
+      if (!confirm('Excluir este serviço do catálogo?')) return;
+      db.services = db.services.filter(s => s.id !== id);
+      saveDB();
+      renderServices();
+      renderStats();
+    }
+
+    // ---- GESTÃO DE CLIENTES ----
+    function upsertClient(name, whatsapp) {
+      const digits = cleanDigits(whatsapp);
+      let existing = db.clients.find(c => cleanDigits(c.whatsapp) === digits);
+      if (existing) {
+        existing.name = name;
+        existing.whatsapp = whatsapp;
+      } else {
+        existing = { id: 'c' + Date.now(), name, whatsapp };
+        db.clients.push(existing);
+      }
+      return existing;
+    }
+
+    function renderClients() {
+      const query = (document.getElementById('client-search').value || '').toLowerCase();
+      const filtered = db.clients.filter(c =>
+        c.name.toLowerCase().includes(query) || c.whatsapp.includes(query)
+      );
+
+      document.getElementById('clients-count-label').textContent = `${filtered.length} cliente(s) encontrado(s)`;
+      const tbody = document.getElementById('clients-tbody');
+
+      tbody.innerHTML = filtered.map(c => {
+        const appts = db.appointments.filter(a => a.clientId === c.id || cleanDigits(a.clientWhatsapp) === cleanDigits(c.whatsapp));
+        const totalSpent = appts.filter(a => a.status === 'Concluído').reduce((sum, a) => sum + Number(a.price), 0);
+        const waDigits = cleanDigits(c.whatsapp);
+
+        return `
+          <tr class="hover:bg-obsidian-900/40 transition">
+            <td class="py-3.5 px-4 font-semibold text-white">${c.name}</td>
+            <td class="py-3.5 px-4">
+              <a href="https://wa.me/55${waDigits}" target="_blank" class="inline-flex items-center gap-1.5 text-emerald-400 hover:underline text-xs font-medium">
+                <i data-lucide="message-circle" class="w-3.5 h-3.5"></i> ${c.whatsapp}
+              </a>
+            </td>
+            <td class="py-3.5 px-4 text-zinc-300">${appts.length} reserva(s)</td>
+            <td class="py-3.5 px-4 font-bold text-gold-400">${formatBRL(totalSpent)}</td>
+            <td class="py-3.5 px-4 text-right">
+              <button onclick="openClientHistory('${c.id}')" class="px-3 py-1.5 rounded-lg bg-obsidian-800 hover:bg-obsidian-700 text-xs font-semibold text-zinc-200 transition">
+                Ver Histórico
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    function openClientHistory(clientId) {
+      const client = db.clients.find(c => c.id === clientId);
+      if (!client) return;
+      document.getElementById('history-client-name').textContent = client.name;
+      document.getElementById('history-client-wa').textContent = client.whatsapp;
+
+      const appts = db.appointments
+        .filter(a => a.clientId === client.id || cleanDigits(a.clientWhatsapp) === cleanDigits(client.whatsapp))
+        .sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time));
+
+      const listEl = document.getElementById('history-list');
+      listEl.innerHTML = appts.length
+        ? appts.map(a => `
+            <div class="p-3.5 rounded-xl bg-obsidian-900 border border-zinc-800 flex items-center justify-between">
+              <div>
+                <p class="text-sm font-semibold text-white">${a.serviceName}</p>
+                <p class="text-xs text-zinc-400">${formatDateBR(a.date)} às ${a.time} • Prof: ${getProfName(a.professionalId, a.professionalName)}</p>
+              </div>
+              <div class="text-right">
+                <p class="text-sm font-bold text-gold-400">${formatBRL(a.price)}</p>
+                <span class="text-[11px] font-semibold text-zinc-300">${a.status}</span>
+              </div>
+            </div>`).join('')
+        : '<p class="text-sm text-zinc-500 text-center py-6">Sem agendamentos registrados.</p>';
+
+      document.getElementById('modal-client-history').classList.remove('hidden');
+    }
+
+    // ---- COMISSÕES ----
+    function renderCommissions() {
+      const usersToDisplay = isOwner() ? db.users : [currentUser];
+      const grid = document.getElementById('commissions-grid');
+
+      grid.innerHTML = usersToDisplay.map(u => {
+        const userAppts = db.appointments.filter(a => a.professionalId === u.id && a.status !== 'Cancelado');
+        const approvedAppts = userAppts.filter(a => a.status === 'Concluído');
+        const pendingAppts = userAppts.filter(a => a.status === 'Pendente' || a.status === 'Confirmado');
+
+        const approvedTotal = approvedAppts.reduce((s, a) => s + (a.price * (a.commissionPct || 0)) / 100, 0);
+        const pendingTotal = pendingAppts.reduce((s, a) => s + (a.price * (a.commissionPct || 0)) / 100, 0);
+
+        return `
+          <div class="glass-card rounded-2xl p-5 space-y-4">
+            <div class="flex items-center gap-3">
+              <div class="w-11 h-11 rounded-full bg-gold-500/20 border border-gold-500/40 flex items-center justify-center text-gold-300 font-bold">
+                ${u.name.charAt(0)}
+              </div>
+              <div>
+                <h3 class="font-display font-bold text-white">${u.name}</h3>
+                <p class="text-xs text-zinc-400">${u.specialty}</p>
+              </div>
+            </div>
+
+            <div class="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25">
+              <span class="text-[11px] uppercase tracking-wider font-semibold text-emerald-400">Comissão Aprovada (Concluídos)</span>
+              <p class="font-display text-2xl font-bold text-white mt-0.5">${formatBRL(approvedTotal)}</p>
+              <span class="text-[11px] text-zinc-400">${approvedAppts.length} atendimento(s) aprovado(s) pelo dono</span>
+            </div>
+
+            <div class="p-3 rounded-xl bg-obsidian-900 border border-zinc-800 flex items-center justify-between text-xs">
+              <span class="text-zinc-400">Previsto (Pendentes/Confirmados):</span>
+              <span class="font-bold text-amber-400">${formatBRL(pendingTotal)}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ---- LINK DIRETO & QR CODE ----
+    function getBookingURL() {
+      const base = window.location.href.split('?')[0];
+      return `${base}?agendar=true`;
+    }
+
+    function renderQRCodeSVG(targetId, text) {
+      const size = 21;
+      let hash = 0;
+      for (let i = 0; i < text.length; i++) {
+        hash = ((hash << 5) - hash + text.charCodeAt(i)) | 0;
+      }
+
+      const isFinder = (r, c) => {
+        const topLeft = r < 7 && c < 7;
+        const topRight = r < 7 && c >= size - 7;
+        const bottomLeft = r >= size - 7 && c < 7;
+        if (!topLeft && !topRight && !bottomLeft) return null;
+        const lr = r >= size - 7 ? r - (size - 7) : r;
+        const lc = c >= size - 7 ? c - (size - 7) : c;
+        if (lr === 0 || lr === 6 || lc === 0 || lc === 6) return true;
+        if (lr >= 2 && lr <= 4 && lc >= 2 && lc <= 4) return true;
+        return false;
+      };
+
+      let rects = '';
+      for (let r = 0; r < size; r++) {
+        for (let c = 0; c < size; c++) {
+          let filled = isFinder(r, c);
+          if (filled === null) {
+            if ((r === 7 && c < 8) || (c === 7 && r < 8) || (r === 7 && c >= size - 8) || (c === size - 8 && r < 8) || (r === size - 8 && c < 8) || (c === 7 && r >= size - 8)) {
+              filled = false;
+            } else {
+              const seed = Math.abs((hash ^ (r * 73856093) ^ (c * 19349663)) % 100);
+              filled = seed > 46;
+            }
+          }
+          if (filled) {
+            rects += `<rect x="${c}" y="${r}" width="1" height="1" fill="#0D0D10" />`;
+          }
+        }
+      }
+      document.getElementById(targetId).innerHTML = `<svg viewBox="0 0 ${size} ${size}" class="w-full h-full shape-rendering-crispEdges">${rects}</svg>`;
+    }
+
+    function renderShareLinks() {
+      const url = getBookingURL();
+      document.getElementById('share-tab-link').value = url;
+      renderQRCodeSVG('share-tab-qrcode', url);
+    }
+
+    function openShareModal() {
+      const url = getBookingURL();
+      document.getElementById('modal-share-link').value = url;
+      renderQRCodeSVG('modal-qrcode', url);
+      document.getElementById('modal-share').classList.remove('hidden');
+    }
+
+    function copyBookingLink() {
+      const url = getBookingURL();
+      navigator.clipboard?.writeText(url).catch(() => {});
+      showToast({ title: 'Link Copiado!', message: 'Cole no WhatsApp ou Instagram para seus clientes agendarem.', type: 'success' });
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+    }
+
+    // =========================================================================
+    // 5. PAINEL DO CLIENTE (RESPEITA HORÁRIOS SEMANAIS, ALMOÇO E TRAVAS)
+    // =========================================================================
+    function resetClientWizard() {
+      wizardState = {
+        step: 1,
+        serviceId: null,
+        professionalId: db.users[0]?.id || null,
+        date: TODAY,
+        time: null
+      };
+      document.getElementById('client-name-input').value = '';
+      document.getElementById('client-whatsapp-input').value = '';
+      document.getElementById('client-date-input').min = TODAY;
+      document.getElementById('client-date-input').value = TODAY;
+      renderClientServices();
+      updateWizardUI();
+    }
+
+    function updateWizardUI() {
+      document.querySelectorAll('.wizard-step').forEach(el => el.classList.add('hidden'));
+      document.getElementById(`wizard-step-${wizardState.step}`).classList.remove('hidden');
+
+      document.querySelectorAll('.step-pill').forEach(pill => {
+        const s = Number(pill.dataset.step);
+        const bar = pill.querySelector('div');
+        const label = pill.querySelector('span');
+        if (s <= wizardState.step) {
+          bar.className = 'h-1.5 rounded-full bg-gold-500 transition-all';
+          label.className = 'block text-[10px] font-semibold text-gold-400 mt-1 text-center';
+        } else {
+          bar.className = 'h-1.5 rounded-full bg-zinc-800 transition-all';
+          label.className = 'block text-[10px] font-medium text-zinc-500 mt-1 text-center';
+        }
+      });
+
+      const footer = document.getElementById('client-wizard-footer');
+      const prevBtn = document.getElementById('wizard-prev-btn');
+      const nextBtn = document.getElementById('wizard-next-btn');
+
+      if (wizardState.step === 4) {
+        footer.classList.add('hidden');
+      } else {
+        footer.classList.remove('hidden');
+        prevBtn.classList.toggle('hidden', wizardState.step === 1);
+        nextBtn.querySelector('span').textContent = wizardState.step === 3 ? 'Confirmar Agendamento' : 'Continuar';
+      }
+      lucide.createIcons();
+    }
+
+    function renderClientServices() {
+      const container = document.getElementById('client-services-list');
+      container.innerHTML = db.services.map(s => {
+        const selected = wizardState.serviceId === s.id;
+        return `
+          <button type="button" onclick="selectClientService('${s.id}')"
+            class="w-full text-left p-4 rounded-2xl border transition flex items-start justify-between gap-3 ${selected ? 'bg-gold-500/15 border-gold-500 shadow-lg shadow-gold-500/10' : 'bg-obsidian-950 border-zinc-800 hover:border-zinc-700'}">
+            <div class="flex-1">
+              <div class="flex items-center gap-2">
+                <h3 class="font-display font-bold text-sm text-white">${s.name}</h3>
+                ${selected ? '<i data-lucide="check-circle-2" class="w-4 h-4 text-gold-400"></i>' : ''}
+              </div>
+              <p class="text-xs text-zinc-400 mt-1 leading-relaxed">${s.description}</p>
+              <span class="inline-flex items-center gap-1 text-[11px] text-zinc-400 mt-2 font-medium">
+                <i data-lucide="clock" class="w-3 h-3 text-gold-400"></i> ${s.duration} minutos
+              </span>
+            </div>
+            <div class="text-right shrink-0">
+              <span class="text-base font-bold text-gold-400">${formatBRL(s.price)}</span>
+            </div>
+          </button>
+        `;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    function selectClientService(serviceId) {
+      wizardState.serviceId = serviceId;
+      wizardState.time = null;
+      renderClientServices();
+    }
+
+    function renderClientProfessionals() {
+      if (!db.users.some(u => u.id === wizardState.professionalId)) {
+        wizardState.professionalId = db.users[0]?.id || null;
+      }
+      const container = document.getElementById('client-professionals-list');
+      container.innerHTML = db.users.map(u => {
+        const selected = wizardState.professionalId === u.id;
+        return `
+          <button type="button" onclick="selectClientProfessional('${u.id}')"
+            class="w-full p-3 rounded-xl border transition flex items-center justify-between ${selected ? 'bg-gold-500/15 border-gold-500' : 'bg-obsidian-950 border-zinc-800 hover:border-zinc-700'}">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-full bg-gold-500/20 text-gold-300 font-bold text-sm flex items-center justify-center">
+                ${u.name.charAt(0)}
+              </div>
+              <div class="text-left">
+                <p class="text-sm font-semibold text-white">${u.name}</p>
+                <p class="text-[11px] text-zinc-400">${u.specialty}</p>
+              </div>
+            </div>
+            ${selected ? '<i data-lucide="check-circle-2" class="w-4 h-4 text-gold-400"></i>' : '<div class="w-4 h-4 rounded-full border border-zinc-700"></div>'}
+          </button>
+        `;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    function selectClientProfessional(profId) {
+      wizardState.professionalId = profId;
+      wizardState.time = null;
+      renderClientProfessionals();
+      renderAvailableSlots();
+    }
+
+    function renderAvailableSlots() {
+      const dateInput = document.getElementById('client-date-input');
+      wizardState.date = dateInput.value || TODAY;
+      const service = db.services.find(s => s.id === wizardState.serviceId);
+      if (!service) return;
+
+      const grid = document.getElementById('client-slots-grid');
+      const hint = document.getElementById('slots-status-hint');
+
+      const dow = getDayOfWeek(wizardState.date);
+      const dayCfg = db.settings.weeklyHours[dow];
+
+      if (!dayCfg || !dayCfg.open) {
+        wizardState.time = null;
+        hint.textContent = `Fechado (${WEEKDAY_NAMES[dow]})`;
+        grid.innerHTML = `<div class="col-span-full text-center py-5 px-3 rounded-xl bg-obsidian-950 border border-red-500/25 text-xs text-red-300">A barbearia não funciona às ${WEEKDAY_NAMES[dow]}s. Escolha outra data.</div>`;
+        return;
+      }
+
+      const openMin = timeToMinutes(dayCfg.start);
+      const closeMin = timeToMinutes(dayCfg.end);
+      const step = db.settings.slotInterval;
+
+      const now = new Date();
+      const nowMin = now.getHours() * 60 + now.getMinutes();
+
+      const booked = db.appointments.filter(a =>
+        a.date === wizardState.date &&
+        a.professionalId === wizardState.professionalId &&
+        a.status !== 'Cancelado'
+      );
+
+      const slots = [];
+      for (let m = openMin; m + service.duration <= closeMin; m += step) {
+        if (wizardState.date === TODAY && m <= nowMin + 15) continue;
+
+        const slotEnd = m + service.duration;
+        if (getSlotBlockReason(wizardState.date, wizardState.professionalId, m, slotEnd)) {
+          continue;
+        }
+
+        const hasConflict = booked.some(b => {
+          const bStart = timeToMinutes(b.time);
+          const bEnd = bStart + Number(b.duration);
+          return m < bEnd && slotEnd > bStart;
+        });
+
+        if (!hasConflict) slots.push(minutesToTime(m));
+      }
+
+      if (!slots.includes(wizardState.time)) {
+        wizardState.time = null;
+      }
+
+      if (!slots.length) {
+        hint.textContent = 'Sem horários livres';
+        grid.innerHTML = `<div class="col-span-full text-center py-4 rounded-xl bg-obsidian-950 border border-zinc-800 text-xs text-zinc-400">Sem horários livres para esta data. Escolha outro dia ou profissional.</div>`;
+        return;
+      }
+
+      hint.textContent = `${slots.length} horários (${dayCfg.start}–${dayCfg.end})`;
+      grid.innerHTML = slots.map(t => {
+        const selected = wizardState.time === t;
+        return `
+          <button type="button" onclick="selectClientTime('${t}')"
+            class="py-2.5 rounded-xl text-xs font-bold border transition ${selected ? 'gold-gradient text-obsidian-950 border-gold-400 shadow-md' : 'bg-obsidian-950 border-zinc-800 text-zinc-200 hover:border-gold-500/50'}">
+            ${t}
+          </button>
+        `;
+      }).join('');
+    }
+
+    function selectClientTime(t) {
+      wizardState.time = t;
+      renderAvailableSlots();
+    }
+
+    function prevWizardStep() {
+      if (wizardState.step > 1) {
+        wizardState.step--;
+        updateWizardUI();
+      }
+    }
+
+    function nextWizardStep() {
+      if (wizardState.step === 1) {
+        if (!wizardState.serviceId) {
+          return showToast({ title: 'Atenção', message: 'Selecione um serviço para continuar.', type: 'danger' });
+        }
+        const service = db.services.find(s => s.id === wizardState.serviceId);
+        document.getElementById('step2-service-summary').textContent = `${service.name} • ${service.duration} min • ${formatBRL(service.price)}`;
+        wizardState.step = 2;
+        renderClientProfessionals();
+        renderAvailableSlots();
+        updateWizardUI();
+      } else if (wizardState.step === 2) {
+        if (!wizardState.time) {
+          return showToast({ title: 'Escolha um Horário', message: 'Toque em um horário disponível para prosseguir.', type: 'danger' });
+        }
+        const service = db.services.find(s => s.id === wizardState.serviceId);
+        const prof = db.users.find(u => u.id === wizardState.professionalId);
+        document.getElementById('summary-service').textContent = service.name;
+        document.getElementById('summary-prof').textContent = prof.name;
+        document.getElementById('summary-datetime').textContent = `${formatDateBR(wizardState.date)} às ${wizardState.time}`;
+        document.getElementById('summary-price').textContent = formatBRL(service.price);
+        wizardState.step = 3;
+        updateWizardUI();
+      } else if (wizardState.step === 3) {
+        const name = document.getElementById('client-name-input').value.trim();
+        const wa = document.getElementById('client-whatsapp-input').value.trim();
+        const errEl = document.getElementById('client-step3-error');
+
+        if (name.length < 3 || cleanDigits(wa).length < 10) {
+          errEl.textContent = 'Preencha seu nome completo e um WhatsApp válido com DDD.';
+          errEl.classList.remove('hidden');
+          return;
+        }
+        errEl.classList.add('hidden');
+        finalizeClientBooking(name, wa);
+      }
+    }
+
+    function finalizeClientBooking(name, wa) {
+      const service = db.services.find(s => s.id === wizardState.serviceId);
+      const prof = db.users.find(u => u.id === wizardState.professionalId);
+      const client = upsertClient(name, wa);
+
+      const newAppt = {
+        id: 'a' + Date.now(),
+        clientId: client.id,
+        clientName: client.name,
+        clientWhatsapp: client.whatsapp,
+        serviceId: service.id,
+        serviceName: service.name,
+        price: service.price,
+        duration: service.duration,
+        commissionPct: service.commissionPct,
+        professionalId: prof.id,
+        professionalName: prof.name,
+        date: wizardState.date,
+        time: wizardState.time,
+        status: 'Pendente',
+        source: 'autoatendimento',
+        createdAt: new Date().toISOString()
+      };
+
+      db.appointments.push(newAppt);
+      saveDB();
+
+      document.getElementById('confirmation-realtime-msg').innerHTML =
+        `Olá, <strong class="text-white">${client.name}</strong>! Seu horário na <strong class="text-gold-400">${db.settings.name}</strong> para <strong class="text-gold-400">${service.name}</strong> com <strong class="text-white">${prof.name}</strong> foi reservado para <strong class="text-gold-400">${formatDateBR(newAppt.date)} às ${newAppt.time}</strong>.`;
+
+      document.getElementById('confirmation-ticket').innerHTML = `
+        <div class="flex justify-between"><span class="text-zinc-400">Protocolo:</span><span class="font-mono text-gold-400">#${newAppt.id.slice(-6).toUpperCase()}</span></div>
+        <div class="flex justify-between"><span class="text-zinc-400">Serviço:</span><span class="text-white font-semibold">${service.name}</span></div>
+        <div class="flex justify-between"><span class="text-zinc-400">Profissional:</span><span class="text-white">${prof.name}</span></div>
+        <div class="flex justify-between"><span class="text-zinc-400">Data / Hora:</span><span class="text-white font-semibold">${formatDateBR(newAppt.date)} - ${newAppt.time}</span></div>
+        <div class="flex justify-between pt-2 border-t border-zinc-800"><span class="text-zinc-400">Valor:</span><span class="text-gold-300 font-bold">${formatBRL(service.price)}</span></div>
+      `;
+
+      const waMsg = encodeURIComponent(
+        `Olá! Acabei de agendar pelo autoatendimento da ${db.settings.name}:\n` +
+        `• Serviço: ${service.name}\n` +
+        `• Profissional: ${prof.name}\n` +
+        `• Data/Hora: ${formatDateBR(newAppt.date)} às ${newAppt.time}\n` +
+        `• Cliente: ${client.name}`
+      );
+      document.getElementById('confirmation-wa-btn').href = `https://wa.me/${db.settings.whatsapp}?text=${waMsg}`;
+
+      wizardState.step = 4;
+      updateWizardUI();
+
+      const notifyText = `${client.name} agendou ${service.name} com ${prof.name} para ${formatDateBR(newAppt.date)} às ${newAppt.time}.`;
+      pendingAdminNotification = notifyText;
+
+      showToast({
+        title: 'Alerta Admin • Novo Agendamento!',
+        message: notifyText,
+        type: 'gold',
+        duration: 7500
+      });
+    }
+
+    window.addEventListener('storage', (e) => {
+      if (e.key === STORAGE_KEY) {
+        const previousCount = db.appointments.length;
+        db = loadDB();
+        if (db.appointments.length > previousCount) {
+          const latest = db.appointments[db.appointments.length - 1];
+          if (!document.getElementById('view-admin').classList.contains('hidden')) {
+            renderStats();
+            if (currentAdminTab === 'agenda') renderAgenda();
+            if (currentAdminTab === 'clients') renderClients();
+            showToast({
+              title: 'Novo Agendamento Recebido!',
+              message: `${latest.clientName} reservou ${latest.serviceName} para ${formatDateBR(latest.date)} às ${latest.time}.`,
+              type: 'gold',
+              duration: 7500
+            });
+          }
+        }
+      }
+    });
+
+    // =========================================================================
+    // 6. INICIALIZAÇÃO
+    // =========================================================================
+    (function init() {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('agendar') === 'true') {
+        switchView('client');
+      } else if (currentUser) {
+        switchView('admin');
+      } else {
+        switchView('login');
+      }
+    })();
+  </script>
+</body>
+</html>
